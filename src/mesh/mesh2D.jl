@@ -18,12 +18,12 @@ end
 function Mesh2D( name::String, porder_::Int64 )
 
   if name == "square"
-    (p_, t_) = makesquare( 5 )
+    (p_, t_, bel_) = makesquare( 5 )
   else
     error("Unknown mesh type")
   end
 
-  (f_, t2f_, nodes_) = genmesh( porder_, p_, t_ )
+  (f_, t2f_, nodes_) = genmesh( porder_, p_, t_, bel_ )
 
   n_ = size( p_, 1 )
 
@@ -33,9 +33,9 @@ end
 
 # Constructor with p, and t given
 
-function Mesh2D( porder_::Int64, p_::Array{Float64}, t_::Array{Int64} )
+function Mesh2D( porder_::Int64, p_::Array{Float64}, t_::Array{Int64}, bel_::Array{Int64} )
 
-  (f_, t2f_, nodes_) = genmesh( porder_, p_, t_ )
+  (f_, t2f_, nodes_) = genmesh( porder_, p_, t_, bel_ )
 
   n_ = size( p_, 1 )
 
@@ -43,23 +43,23 @@ function Mesh2D( porder_::Int64, p_::Array{Float64}, t_::Array{Int64} )
 
 end
 
-function genmesh( porder::Int64, p::Array{Float64}, t::Array{Int64} )
+function genmesh( porder::Int64, p::Array{Float64}, t::Array{Int64}, bel_::Array{Int64} )
 
   f_     = [0]
   t2f_   = [0]
   nodes_ = [0]
-  (f_, t2f_) = genFaces2D( t ) # TODO: Boundaries! (have that be an input)
+  (f_, t2f_) = genFaces2D( t, bel_ ) # TODO: Boundaries! (have that be an input)
   # nodes_     = genNodes2D( porder, p, t )
   nodes_ = [0]
   return f_, t2f_, nodes_
 
 end
 
-function genFaces2D( t::Array{Int64} )
+function genFaces2D( t::Array{Int64}, bel::Array{Int64} )
 
   nt = size(t,1)
 
-  edges  = vcat( t[:,[2,3]], t[:,[3,1]], t[:,[1,2]] )
+  edges  = vcat( t[:,[2,3]], t[:,[3,1]], t[:,[1,2]] ) # This holds all edges (but multiple copies)
   triang = 1:nt
   triang = vcat( triang, triang, triang )
 
@@ -77,37 +77,38 @@ function genFaces2D( t::Array{Int64} )
     end
   end
 
-  ix     = groupslices( edges, 1 )
+  # This index links to the first unique index in the array edges
+  ix  = groupslices( edges, 1 )
 
   t2f = fill(0::Int64, nt, 3)
 
   # Find unique vector index
+  # Need to find an index that links from edges to the unique edges (without gaps)
   jx = Array{Int64}( size(ix) )
   jx[1] = 0
-  lind = 0
-  mind = 0
+  lind = 0 # maximum unique index
+  mind = 0 # maximum index in edges that had unique index
+  ne = 0  # number of unique elements
 
-  ne = 0
-
-  indUni = fill( false, size(ix,1) )
+  indUni = fill( false, size(ix,1) ) # index of unique elements
 
   for ii = 1:length(ix)
-    temp = ix[ii] - lind - 1;temp2 = ix[ii] - mind - 1
-    jx[ii] = temp
-    mind = max(mind,ix[ii])
-    if temp >= 0
+    temp    = ix[ii] - lind - 1
+    temp2   = ix[ii] - mind - 1
+    jx[ii]  = temp
+    mind    = max(mind,ix[ii])
+
+    if temp >= 0 # Found a unique index
       lind = lind + 1
       ne  = ne + 1
       indUni[ii] = true
     end
-    if temp2 < 0
+
+    if temp2 < 0 # Need to link to the unique index
       jx[ii] = jx[ix[ii]]
     end
-  end
 
-  println(ix)
-  println(tflip)
-  println(ix - jx)
+  end
 
   f = fill( 0::Int64, ne, 4 )
 
@@ -131,6 +132,41 @@ function genFaces2D( t::Array{Int64} )
 
   end
 
+  ### Boundary Elements
+  # include information from 'bel' into 'f': the index of the boundaries
+
+  bel[:,1:2] = sort(bel[:,1:2],2) # sort such that we compare against f
+
+  # Look in third array
+  indb = find( f[:,3] .== 0 )
+  for jj = 1:length(indb)
+    indf = indb[jj]
+
+    # Find corresponding element in boundary element vector
+    indel = find( all( bel[:,1:2] .== f[indf,1:2]', 2) )
+
+    # Ensure boundary element is oriented counter-clockwise
+    temp = f[indf,1]
+    f[indf,1] = f[indf,2]
+    f[indf,2] = temp
+    f[indf,3] = f[indf,4]
+
+    # Mark correct boundary
+    f[indf,4] = - bel[indel[1],3]
+  end
+
+  # Look in fourth array
+  indb = find( f[:,4] .== 0 )
+  for jj = 1:length(indb)
+    indf = indb[jj]
+
+    # Find corresponding element in boundary element vector
+    indel = find( all( bel[:,1:2] .== f[indf,1:2]', 2) )
+
+    # Mark correct boundary
+    f[indf,4] = - bel[indel[1],3]
+  end
+
   return f, t2f
 
 end
@@ -140,8 +176,9 @@ function makesquare( a )
   n = 3
   m = 3
 
-  p = Array{Float64}( n*m, 2 )
-  t = Array{Int64}( 2*(n-1)*(m-1), 3 )
+  p   = Array{Float64}( n*m, 2 )
+  t   = Array{Int64}( 2*(n-1)*(m-1), 3 )
+  bel = Array{Int64}( 2*(n-1) + 2*(m-1), 3 )
 
   # nodes
   for ii = 1:n, jj = 1:m
@@ -165,6 +202,28 @@ function makesquare( a )
 
   end
 
-  return p, t
+  # boundary elements
+  kk = 1
+  for ii = 1:n-1 # South
+    bel[kk,:] = [ ii, ii + 1, 1 ]
+    kk = kk + 1
+  end
+  for jj = 1:m-1 # East
+    ii = n - 1
+    bel[kk,:] = [ ii + 1 + (jj-1) * n, ii + 1 + jj * n, 2 ]
+    kk = kk + 1
+  end
+  for ii = n-1:-1:1 # North
+    jj = m - 1
+    bel[kk,:] = [ ii + 1 + jj * n, ii + jj * n, 3 ]
+    kk = kk + 1
+  end
+  for jj = m-1:-1:1 # East
+    ii = 1
+    bel[kk,:] = [ ii + jj * n, ii + (jj-1) * n, 4 ]
+    kk = kk + 1
+  end
+
+  return p, t, bel
 
 end
