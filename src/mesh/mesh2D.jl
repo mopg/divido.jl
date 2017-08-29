@@ -10,7 +10,7 @@ type Mesh2D #<: Mesh # Or should I just do union type??
   t::Array{Int64}     # Triangle - node connectivity
   t2f::Array{Int64}   # Triangle - face connectivity
   f::Array{Int64}     # Face - node/triangle connectivity
-  nodes::Array{Int64} # Nodes on which solution is evaluated
+  nodes::Array{Float64} # Nodes on which solution is evaluated
 
 end
 
@@ -18,7 +18,7 @@ end
 function Mesh2D( name::String, porder_::Int64 )
 
   if name == "square"
-    (p_, t_, bel_) = makesquare( 5 )
+    (p_, t_, bel_) = makesquare( 3, 3 )
   else
     error("Unknown mesh type")
   end
@@ -45,12 +45,9 @@ end
 
 function genmesh( porder::Int64, p::Array{Float64}, t::Array{Int64}, bel_::Array{Int64} )
 
-  f_     = [0]
-  t2f_   = [0]
-  nodes_ = [0]
-  (f_, t2f_) = genFaces2D( t, bel_ ) # TODO: Boundaries! (have that be an input)
-  # nodes_     = genNodes2D( porder, p, t )
-  nodes_ = [0]
+  (f_, t2f_) = genFaces2D( t, bel_ )
+  nodes_     = genNodes2D( porder, p, t )
+
   return f_, t2f_, nodes_
 
 end
@@ -171,7 +168,56 @@ function genFaces2D( t::Array{Int64}, bel::Array{Int64} )
 
 end
 
-function makesquare( a )
+function genNodes2D( porder::Int64, p::Array{Float64}, t::Array{Int64} )
+
+  nt     = size(t,1)
+  # (plocal, tlocal) = genlocal( porder )
+  plocal = genlocal( porder )
+
+  npl    = size(plocal,1)
+  nodes  = fill( 0.0, npl, 2, nt )
+
+  # We use barycentric coordinates for this
+  # for interpolation with barycentric coordinates at the point (xi,yi) with
+  # barycentric coordinates (li1, li2, li3), the following holds:
+  #   f(xi,yi) = li1 * f(x1,y1) + li2 * f(x2,y2) + li3 * f(x3,y3)
+  
+  for ii = 1:nt, jj = 1:npl
+    for kk = 1:3
+      nodes[jj,1,ii] += plocal[jj,kk] * p[ t[ii,kk], 1 ]
+      nodes[jj,2,ii] += plocal[jj,kk] * p[ t[ii,kk], 2 ]
+    end
+  end
+
+  return nodes
+
+end
+
+function genlocal( porder::Int64 )
+
+  # Generate the barycentric coordinates
+  # here these are implemented as (1 - x - y, x, y)
+
+  n = Int64( round( 0.5 * (porder+1) * (porder+2) ) )
+
+  plocal = Array{Float64}( n, 2 )
+  kk = 1
+  for jj = 1:porder+1
+    for ii = 1:(porder + 2 - jj)
+      plocal[kk,:] = [ (ii-1)/porder, (jj-1)/porder ]
+      kk = kk + 1
+    end
+  end
+
+  temp = 1 - sum(plocal,2)
+
+  plocal = hcat( temp, plocal )
+
+  return plocal
+
+end
+
+function makesquare( n::Int64, m::Int64 )
 
   n = 3
   m = 3
