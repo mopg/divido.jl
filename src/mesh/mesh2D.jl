@@ -1,15 +1,15 @@
 using GroupSlices # TODO: KEEP TRACK OF DEPENDENCIES
 
-type Mesh2D #<: Mesh # Or should I just do union type??
+type Mesh2D #<: Mesh    # Or should I just do union type??
 
-  porder::Int64       # Polynomial order
+  porder::Int64         # Polynomial order
 
-  n::Int64            # Number of nodes
+  n::Int64              # Number of nodes
 
-  p::Array{Float64}   # Nodal locations
-  t::Array{Int64}     # Triangle - node connectivity
-  t2f::Array{Int64}   # Triangle - face connectivity
-  f::Array{Int64}     # Face - node/triangle connectivity
+  p::Array{Float64}     # Nodal locations
+  t::Array{Int64}       # Triangle - node connectivity
+  t2f::Array{Int64}     # Triangle - face connectivity
+  f::Array{Int64}       # Face - node/triangle connectivity
   nodes::Array{Float64} # Nodes on which solution is evaluated
 
 end
@@ -181,7 +181,7 @@ function genNodes2D( porder::Int64, p::Array{Float64}, t::Array{Int64} )
   # for interpolation with barycentric coordinates at the point (xi,yi) with
   # barycentric coordinates (li1, li2, li3), the following holds:
   #   f(xi,yi) = li1 * f(x1,y1) + li2 * f(x2,y2) + li3 * f(x3,y3)
-  
+
   for ii = 1:nt, jj = 1:npl
     for kk = 1:3
       nodes[jj,1,ii] += plocal[jj,kk] * p[ t[ii,kk], 1 ]

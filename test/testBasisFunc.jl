@@ -1,4 +1,4 @@
-include("../src/basisFuncTriangle.jl")
+include("../src/integration/basisFuncTriangle.jl")
 
 # order 1
 order = 1
@@ -8,5 +8,5 @@ y = [2.0, 1.0]
 
 @test phi[1,1] == 1.0
 
-@test dphi[1,1,1] == 0.0
-@test dphi[1,1,2] == 0.0
+@test abs(dphi[1,1,1]) < 1e-15
+@test abs(dphi[1,1,2]) < 1e-15
