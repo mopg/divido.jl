@@ -1,4 +1,4 @@
-include("../src/mesh/master2D.jl")
+# include("../src/mesh/master2D.jl")
 
 tol = 1e-13
 
@@ -6,7 +6,7 @@ pmax = 4
 
 for ii = 1:pmax
 
-  @printf( " Test master element at %i\n", ii )
+  @printf( " Test 2D master element at %i\n", ii )
 
   master = Master2D( ii )
 
