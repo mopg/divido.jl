@@ -4,13 +4,15 @@ tol = 1e-13
 
 pmax = 3
 
+println( "Legendre basis functions")
+
 for ii = 1:pmax
 
-  @printf( " Test 3D master element at %i\n", ii )
+  @printf( "   Test 3D master element at %i\n", ii )
 
-  master = Master3D( ii )
+  master = Master3D( ii; typeb = "leg" )
 
-  println( "    3D")
+  println( "      3D")
 
   res = master.phi' * diagm(master.gwts) * master.phi
   sz  = size( res )
@@ -23,3 +25,5 @@ for ii = 1:pmax
   end
 
 end
+
+# TODO: Lagrangian

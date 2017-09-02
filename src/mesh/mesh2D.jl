@@ -7,10 +7,15 @@ type Mesh2D #<: Mesh    # Or should I just do union type??
   n::Int64              # Number of nodes
 
   p::Array{Float64}     # Nodal locations
+  ploc::Array{Float64}  # Local nodal locations
   t::Array{Int64}       # Triangle - node connectivity
   t2f::Array{Int64}     # Triangle - face connectivity
   f::Array{Int64}       # Face - node/triangle connectivity
   nodes::Array{Float64} # Nodes on which solution is evaluated
+
+  # Jacobian -- this doesn't seem like very efficient to store like this
+  # jcw::Array{Float64}
+  # xix::Array{Float64}
 
 end
 
@@ -23,11 +28,11 @@ function Mesh2D( name::String, porder_::Int64 )
     error("Unknown mesh type")
   end
 
-  (f_, t2f_, nodes_) = genmesh( porder_, p_, t_, bel_ )
+  (f_, t2f_, nodes_, ploc_) = genmesh( porder_, p_, t_, bel_ )
 
   n_ = size( p_, 1 )
 
-  Mesh2D( porder_, n_, p_, t_, t2f_, f_, nodes_ )
+  Mesh2D( porder_, n_, p_, ploc_, t_, t2f_, f_, nodes_ )
 
 end
 
@@ -35,20 +40,22 @@ end
 
 function Mesh2D( porder_::Int64, p_::Array{Float64}, t_::Array{Int64}, bel_::Array{Int64} )
 
-  (f_, t2f_, nodes_) = genmesh( porder_, p_, t_, bel_ )
+  (f_, t2f_, nodes_, ploc_) = genmesh( porder_, p_, t_, bel_ )
+
+  # (f_, t2f_, nodes_) = compJacob( porder_, p_, t_, bel_ )
 
   n_ = size( p_, 1 )
 
-  Mesh2D( porder_, n_, p_, t_, t2f_, f_, nodes_ )
+  Mesh2D( porder_, n_, p_, ploc_, t_, t2f_, f_, nodes_ )
 
 end
 
 function genmesh( porder::Int64, p::Array{Float64}, t::Array{Int64}, bel_::Array{Int64} )
 
-  (f_, t2f_) = genFaces2D( t, bel_ )
-  nodes_     = genNodes2D( porder, p, t )
+  (f_, t2f_)    = genFaces2D( t, bel_ )
+  nodes_, ploc_ = genNodes2D( porder, p, t )
 
-  return f_, t2f_, nodes_
+  return f_, t2f_, nodes_, ploc_
 
 end
 
@@ -189,7 +196,7 @@ function genNodes2D( porder::Int64, p::Array{Float64}, t::Array{Int64} )
     end
   end
 
-  return nodes
+  return nodes, plocal
 
 end
 
@@ -213,7 +220,46 @@ function genlocal( porder::Int64 )
 
   plocal = hcat( temp, plocal )
 
-  return plocal
+  # Switch to have corners first, then edges
+  if porder > 1
+    plocal2 = fill( 0.0, size(plocal) )
+
+    #   corners
+    plocal2[ 1:3, :] = plocal[ [1 porder+1 n], :]
+    #   long edge
+    kk = 2*porder + 1
+    for jj in 1:(porder-1)
+      plocal2[ (3+jj), :] = plocal[ kk, :]
+      kk += porder - jj
+    end
+    #   west edge
+    kk = n - 2
+    for jj in 1:(porder-1)
+      plocal2[ (2+porder+jj), :] = plocal[ kk, :]
+      kk -= 2 + jj
+    end
+    #   south edge
+    kk = 2
+    for jj in 1:(porder-1)
+      plocal2[ (1+2*porder+jj), :] = plocal[ kk, :]
+      kk += 1
+    end
+    #   center
+    kk = porder + 3
+    pp = 3*(porder-1) + 4
+    for jj in 1:(porder-2)
+      for ii in 1:(porder-1-jj)
+        plocal2[ pp, :] = plocal[ kk, :]
+        pp += 1
+        kk += 1
+      end
+      kk += 2
+    end
+  else
+    plocal2 = plocal
+  end
+
+  return plocal2
 
 end
 
