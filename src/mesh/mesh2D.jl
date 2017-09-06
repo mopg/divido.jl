@@ -14,8 +14,8 @@ type Mesh2D #<: Mesh    # Or should I just do union type??
   nodes::Array{Float64} # Nodes on which solution is evaluated
 
   # Jacobian -- this doesn't seem like very efficient to store like this
-  # jcw::Array{Float64}
-  # xix::Array{Float64}
+  jcw::Array{Float64}
+  xix::Array{Float64}
 
 end
 
@@ -30,9 +30,12 @@ function Mesh2D( name::String, porder_::Int64 )
 
   (f_, t2f_, nodes_, ploc_) = genmesh( porder_, p_, t_, bel_ )
 
+  jcw_ = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
+  xix_ = fill( 0.0, size(nodes_, 1), 4, size(nodes_,3) )
+
   n_ = size( p_, 1 )
 
-  Mesh2D( porder_, n_, p_, ploc_, t_, t2f_, f_, nodes_ )
+  Mesh2D( porder_, n_, p_, ploc_, t_, t2f_, f_, nodes_, jcw_, xix_ )
 
 end
 
@@ -42,11 +45,12 @@ function Mesh2D( porder_::Int64, p_::Array{Float64}, t_::Array{Int64}, bel_::Arr
 
   (f_, t2f_, nodes_, ploc_) = genmesh( porder_, p_, t_, bel_ )
 
-  # (f_, t2f_, nodes_) = compJacob( porder_, p_, t_, bel_ )
+  jcw_ = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
+  xix_ = fill( 0.0, size(nodes_, 1), 4, size(nodes_,3) )
 
   n_ = size( p_, 1 )
 
-  Mesh2D( porder_, n_, p_, ploc_, t_, t2f_, f_, nodes_ )
+  Mesh2D( porder_, n_, p_, ploc_, t_, t2f_, f_, nodes_, jcw_, xix_ )
 
 end
 
