@@ -20,10 +20,10 @@ type Mesh2D #<: Mesh    # Or should I just do union type??
 end
 
 # Constructor with name, i.e square
-function Mesh2D( name::String, porder_::Int64 )
+function Mesh2D( name::String, porder_::Int64; N = 5::Int64 )
 
   if name == "square"
-    (p_, t_, bel_) = makesquare( 3, 3 )
+    (p_, t_, bel_) = makesquare( N, N )
   else
     error("Unknown mesh type")
   end
