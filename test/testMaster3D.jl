@@ -14,7 +14,7 @@ for ii = 1:pmax
 
   println( "      3D")
 
-  res = master.phi' * diagm(master.gwts) * master.phi
+  res = master.ϕ' * diagm(master.gwts) * master.ϕ
   sz  = size( res )
   for jj = 1:sz[1], kk = 1:sz[2]
     if jj == kk

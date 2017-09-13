@@ -59,7 +59,7 @@ for ii = 1:pmax
 
   println( "      1D")
 
-  res1D = master.phi1D' * diagm(master.gwts1D) * master.phi1D
+  res1D = master.ϕ1D' * diagm(master.gwts1D) * master.ϕ1D
   sz    = size( res1D )
   for jj = 1:sz[1], kk = 1:sz[2]
     if jj == kk
@@ -71,7 +71,7 @@ for ii = 1:pmax
 
   println( "      2D")
 
-  res = master.phi' * diagm(master.gwts) * master.phi
+  res = master.ϕ' * diagm(master.gwts) * master.ϕ
   sz  = size( res )
   for jj = 1:sz[1], kk = 1:sz[2]
     if jj == kk
