@@ -106,7 +106,7 @@ function genFaces2D( t::Array{Int64}, bel::Array{Int64} )
     jx[ii]  = temp
     mind    = max(mind,ix[ii])
 
-    if temp >= 0 # Found a unique index
+    if temp2 >= 0 # Found a unique index
       lind = lind + 1
       ne  = ne + 1
       indUni[ii] = true
@@ -268,9 +268,6 @@ function genlocal( porder::Int64 )
 end
 
 function makesquare( n::Int64, m::Int64 )
-
-  n = 3
-  m = 3
 
   p   = Array{Float64}( n*m, 2 )
   t   = Array{Int64}( 2*(n-1)*(m-1), 3 )
