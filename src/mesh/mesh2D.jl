@@ -154,6 +154,11 @@ function genFaces2D( t::Array{Int64}, bel::Array{Int64} )
     indel = find( all( bel[:,1:2] .== f[indf,1:2]', 2) )
 
     # Ensure boundary element is oriented counter-clockwise
+    #   flip orientation of face in t2f
+    indt = f[indf,4]
+    indfint = find( abs(t2f[indt,:]) .== indf )
+    t2f[ f[indf,4], indfint ] = - t2f[ f[indf,4], indfint ]
+    #   flip nodes in f
     temp = f[indf,1]
     f[indf,1] = f[indf,2]
     f[indf,2] = temp
