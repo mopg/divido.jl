@@ -274,6 +274,11 @@ end
 
 function makesquare( n::Int64, m::Int64 )
 
+  # boundary 1 is South
+  # boundary 2 is East
+  # boundary 3 is North
+  # boundary 4 is West
+
   p   = Array{Float64}( n*m, 2 )
   t   = Array{Int64}( 2*(n-1)*(m-1), 3 )
   bel = Array{Int64}( 2*(n-1) + 2*(m-1), 3 )
