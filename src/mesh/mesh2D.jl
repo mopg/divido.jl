@@ -2,12 +2,15 @@ using GroupSlices # TODO: KEEP TRACK OF DEPENDENCIES
 
 type Mesh2D #<: Mesh    # Or should I just do union type??
 
+  dim::Int64            # Dimension of the problem
+
   porder::Int64         # Polynomial order
 
   n::Int64              # Number of nodes
 
   p::Array{Float64}     # Nodal locations
   ploc::Array{Float64}  # Local nodal locations
+  tloc::Array{Int64}  # Local triangles
   t::Array{Int64}       # Triangle - node connectivity
   t2f::Array{Int64}     # Triangle - face connectivity
   f::Array{Int64}       # Face - node/triangle connectivity
@@ -28,14 +31,14 @@ function Mesh2D( name::String, porder_::Int64; N = 5::Int64 )
     error("Unknown mesh type")
   end
 
-  (f_, t2f_, nodes_, ploc_) = genmesh( porder_, p_, t_, bel_ )
+  (f_, t2f_, nodes_, ploc_, tloc_) = genmesh( porder_, p_, t_, bel_ )
 
   jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
   ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 4, size(nodes_,3) )
 
   n_ = size( p_, 1 )
 
-  Mesh2D( porder_, n_, p_, ploc_, t_, t2f_, f_, nodes_, jcw_, ∂ξ∂x_ )
+  Mesh2D( 2, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, nodes_, jcw_, ∂ξ∂x_ )
 
 end
 
@@ -43,23 +46,23 @@ end
 
 function Mesh2D( porder_::Int64, p_::Array{Float64}, t_::Array{Int64}, bel_::Array{Int64} )
 
-  (f_, t2f_, nodes_, ploc_) = genmesh( porder_, p_, t_, bel_ )
+  (f_, t2f_, nodes_, ploc_, tloc_) = genmesh( porder_, p_, t_, bel_ )
 
   jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
   ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 4, size(nodes_,3) )
 
   n_ = size( p_, 1 )
 
-  Mesh2D( porder_, n_, p_, ploc_, t_, t2f_, f_, nodes_, jcw_, ∂ξ∂x_ )
+  Mesh2D( porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, nodes_, jcw_, ∂ξ∂x_ )
 
 end
 
 function genmesh( porder::Int64, p::Array{Float64}, t::Array{Int64}, bel_::Array{Int64} )
 
-  (f_, t2f_)    = genFaces2D( t, bel_ )
-  nodes_, ploc_ = genNodes2D( porder, p, t )
+  (f_, t2f_)           = genFaces2D( t, bel_ )
+  nodes_, ploc_, tloc_ = genNodes2D( porder, p, t )
 
-  return f_, t2f_, nodes_, ploc_
+  return f_, t2f_, nodes_, ploc_, tloc_
 
 end
 
@@ -188,7 +191,7 @@ function genNodes2D( porder::Int64, p::Array{Float64}, t::Array{Int64} )
 
   nt     = size(t,1)
   # (plocal, tlocal) = genlocal( porder )
-  plocal = genlocal( porder )
+  (plocal,tlocal) = genlocal( porder )
 
   npl    = size(plocal,1)
   nodes  = fill( 0.0, npl, 2, nt )
@@ -205,7 +208,7 @@ function genNodes2D( porder::Int64, p::Array{Float64}, t::Array{Int64} )
     end
   end
 
-  return nodes, plocal
+  return nodes, plocal, tlocal
 
 end
 
@@ -268,7 +271,45 @@ function genlocal( porder::Int64 )
     plocal2 = plocal
   end
 
-  return plocal2
+  # generate local triangles -- used for plotting
+  tlocal = Matrix{Int64}( porder^2, 3 )
+  if porder == 1
+    tlocal[1,:]  = [1 2 3]
+  elseif porder == 2
+    tlocal[1,:]  = [1 2 4]
+    tlocal[2,:]  = [2 5 4]
+    tlocal[3,:]  = [2 3 5]
+    tlocal[4,:]  = [4 5 6]
+  elseif porder == 3
+    tlocal[1,:]  = [1 8 7]
+    tlocal[2,:]  = [8 10 7]
+    tlocal[3,:]  = [8 9 10]
+    tlocal[4,:]  = [9 4 10]
+    tlocal[5,:]  = [9 2 4]
+    tlocal[6,:]  = [7 10 6]
+    tlocal[7,:]  = [10 5 6]
+    tlocal[8,:]  = [10 4 5]
+    tlocal[9,:]  = [6 5 3]
+  elseif porder == 4
+    tlocal[1,:]  = [1 10 9]
+    tlocal[2,:]  = [10 13 9]
+    tlocal[3,:]  = [10 11 13]
+    tlocal[4,:]  = [11 14 13]
+    tlocal[5,:]  = [11 12 14]
+    tlocal[6,:]  = [12 4 14]
+    tlocal[7,:]  = [12 2 4]
+    tlocal[8,:]  = [9 13 8]
+    tlocal[9,:]  = [13 15 8]
+    tlocal[10,:] = [13 14 15]
+    tlocal[11,:] = [14 5 15]
+    tlocal[12,:] = [14 4 5]
+    tlocal[13,:] = [8 15 7]
+    tlocal[14,:] = [15 6 7]
+    tlocal[15,:] = [15 5 6]
+    tlocal[16,:] = [7 6 3]
+  end
+
+  return (plocal2, tlocal)
 
 end
 
