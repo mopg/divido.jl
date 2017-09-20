@@ -10,7 +10,7 @@ type Mesh2D #<: Mesh    # Or should I just do union type??
 
   p::Array{Float64}     # Nodal locations
   ploc::Array{Float64}  # Local nodal locations
-  tloc::Array{Int64}  # Local triangles
+  tloc::Array{Int64}    # Local triangles
   t::Array{Int64}       # Triangle - node connectivity
   t2f::Array{Int64}     # Triangle - face connectivity
   f::Array{Int64}       # Face - node/triangle connectivity
@@ -348,21 +348,21 @@ function makesquare( n::Int64, m::Int64 )
 
   # boundary elements
   kk = 1
-  for ii = 1:n-1 # South
+  for ii in 1:n-1 # South
     bel[kk,:] = [ ii, ii + 1, 1 ]
     kk = kk + 1
   end
-  for jj = 1:m-1 # East
+  for jj in 1:m-1 # East
     ii = n - 1
     bel[kk,:] = [ ii + 1 + (jj-1) * n, ii + 1 + jj * n, 2 ]
     kk = kk + 1
   end
-  for ii = n-1:-1:1 # North
+  for ii in n-1:-1:1 # North
     jj = m - 1
     bel[kk,:] = [ ii + 1 + jj * n, ii + jj * n, 3 ]
     kk = kk + 1
   end
-  for jj = m-1:-1:1 # East
+  for jj in m-1:-1:1 # East
     ii = 1
     bel[kk,:] = [ ii + jj * n, ii + (jj-1) * n, 4 ]
     kk = kk + 1
