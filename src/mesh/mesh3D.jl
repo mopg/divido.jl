@@ -21,15 +21,22 @@ type Mesh3D #<: Mesh
 end
 
 # Constructor with name, i.e cube
-function Mesh3D( name::String, porder_::Int64; N = 5::Int64 )
+function Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
 
   if name == "cube"
-    (p_, t_, bel_) = makecube( N, N, N )
+    (p_, t_, bel_) = makecube( N, M, Q )
   else
     error("Unknown mesh type")
   end
 
-  (f_, t2f_, nodes_, ploc_, tloc_) = genmesh3D( porder_, p_, t_, bel_ )
+  println(bel_)
+
+  f_     = fill(0.0,2,2)
+  t2f_   = fill(0.0,2,2)
+  nodes_ = fill(0.0,2,2)
+  ploc_  = fill(0.0,2,2)
+  tloc_  = fill(0.0,2,2)
+  # (f_, t2f_, nodes_, ploc_, tloc_) = genmesh3D( porder_, p_, t_, bel_ )
 
   jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
   ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 9, size(nodes_,3) )
@@ -58,17 +65,36 @@ function makecube( n::Int64, m::Int64, q::Int64 )
   # boundary 5 is South
   # boundary 6 is North
 
-  p   = Array{Float64}( n*m*q, 2 )
+  p   = Array{Float64}( n*m*q, 3 )
+  hex = Array{Int64}( (n-1)*(m-1)*(q-1), 8 ) # Map to ordering per hex cell
   t   = Array{Int64}( 6*(n-1)*(m-1)*(q-1), 4 )
-  bel = Array{Int64}( 2*(n-1)*(q-1) + 2*(m-1)*(q-1) + 2*(m-1)*(n-1), 4 )
+  bel = Array{Int64}( 4*(n-1)*(q-1) + 4*(m-1)*(q-1) + 4*(m-1)*(n-1), 4 )
 
   # nodes
   for ii = 1:n, jj = 1:m, kk = 1:q
-
     p[ii + (jj-1) * n + (kk-1) * n * m, :] = [ 1/(n-1) * (ii - 1),
       1/(m-1) * (jj - 1), 1/(q-1) * (kk - 1) ]
-
   end
+  # hex nodes
+  kk     = 1
+  hexind = 1
+  for qq = 1:(q-1)
+    for jj = 1:(m-1)
+      for ii = 1:(n-1)
+
+        hex[ kk, : ] = [hexind,     hexind+1,     hexind+n,     hexind+n+1,
+                        hexind+n*m, hexind+n*m+1, hexind+n+n*m, hexind+n+1+n*m]
+
+        hexind += 1
+        kk += 1
+
+      end
+      hexind += 1
+    end
+    hexind += n
+  end
+
+  println(hex)
 
   #         y
   #  3----------4
@@ -94,72 +120,72 @@ function makecube( n::Int64, m::Int64, q::Int64 )
 
   # tetrahedra
   ntet_level = (n-1) * (m-1)
-  for ii = 1:(n-1), jj = 1:(m-1), kk = 1:q
+  for ii = 1:(n-1), jj = 1:(m-1), kk = 1:(q-1)
 
     hexind   = (ii-1) + (jj-1) * (n-1) + (kk-1) * (n-1) * (m-1)
 
     for pp in 1:6
-      t[ 6*hexind + pp, :] = hexind + tethexind[pp,:]
+      t[ 6*hexind + pp, :] = hex[ hexind+1, tethexind[pp,:] ]
     end
 
   end
 
   # triangle index for boundary
   indyzpos  = [2 4 6;
-              4 8 6]
+               4 8 6]
   indyzneg  = [1 5 3;
-              5 7 3]
-  indxzneg = [6 5 2;
-              5 1 2]
-  indxzpos = [8 4 7;
-              4 3 7]
-  indxypos = [5 6 7;
-              6 8 7]
-  indxyneg = [4 2 3;
-              2 1 3]
+               5 7 3]
+  indxzneg  = [6 5 2;
+               5 1 2]
+  indxzpos  = [8 4 7;
+               4 3 7]
+  indxypos  = [5 6 7;
+               6 8 7]
+  indxyneg  = [4 2 3;
+               2 1 3]
 
   # boundary elements
   kk = 1
   for ii in 1:n-1, jj in 1:m-1 # xy neg
     indhex = (ii-1) + (jj-1)*(n-1)
-    bel[kk,:] = [ indxyneg + indxyneg[1,:], 1 ]
+    bel[kk,:] = [ hex[ indhex+1, indxyneg[1,:] ]'  1 ]
     kk = kk + 1
-    bel[kk,:] = [ indxyneg + indxyneg[2,:], 1 ]
+    bel[kk,:] = [ hex[ indhex+1, indxyneg[2,:] ]'  1 ]
     kk = kk + 1
   end
-  for jj in 1:m-1, kk in 1:q-1 # yz pos
-    indhex = (n-2) + (jj-1)*(n-1) + (kk-1)*(n-1)*(m-1)
-    bel[kk,:] = [ indhex + indyzpos[1,:], 2 ]
+  for jj in 1:m-1, qq in 1:q-1 # yz pos
+    indhex = (n-2) + (jj-1)*(n-1) + (qq-1)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indyzpos[1,:] ]'  2 ]
     kk = kk + 1
-    bel[kk,:] = [ indhex + indyzpos[2,:], 2 ]
+    bel[kk,:] = [ hex[ indhex+1, indyzpos[2,:] ]'  2 ]
     kk = kk + 1
   end
   for ii in 1:n-1, jj in 1:m-1 # xy pos
     indhex = (ii-1) + (jj-1)*(n-1) + (q-2)*(n-1)*(m-1)
-    bel[kk,:] = [ indxypos + indxypos[1,:], 1 ]
+    bel[kk,:] = [ hex[ indhex+1, indxypos[1,:] ]'  3 ]
     kk = kk + 1
-    bel[kk,:] = [ indxypos + indxypos[2,:], 1 ]
-    kk = kk + 1
-  end
-  for jj in 1:m-1, kk in 1:q-1 # yz neg
-    indhex = (jj-1)*(n-1) + (kk-1)*(n-1)*(m-1)
-    bel[kk,:] = [ indhex + indyzneg[1,:], 2 ]
-    kk = kk + 1
-    bel[kk,:] = [ indhex + indyzneg[2,:], 2 ]
+    bel[kk,:] = [ hex[ indhex+1, indxypos[2,:] ]'  3 ]
     kk = kk + 1
   end
-  for ii in 1:n-1, kk in 1:q-1 # xz neg
-    indhex = (ii-1) + (kk-1)*(n-1)*(m-1)
-    bel[kk,:] = [ indhex + indxzneg[1,:], 2 ]
+  for jj in 1:m-1, qq in 1:q-1 # yz neg
+    indhex = (jj-1)*(n-1) + (qq-1)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indyzneg[1,:] ]'  4 ]
     kk = kk + 1
-    bel[kk,:] = [ indhex + indxzneg[2,:], 2 ]
+    bel[kk,:] = [ hex[ indhex+1, indyzneg[2,:] ]'  4 ]
     kk = kk + 1
   end
-  for ii in 1:n-1, kk in 1:q-1 # xz pos
-    indhex = (ii-1) + (m-2)*(n-1) + (kk-1)*(n-1)*(m-1)
-    bel[kk,:] = [ indhex + indxzpos[1,:], 2 ]
+  for ii in 1:n-1, qq in 1:q-1 # xz neg
+    indhex = (ii-1) + (qq-1)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indxzneg[1,:] ]'  5 ]
     kk = kk + 1
-    bel[kk,:] = [ indhex + indxzpos[2,:], 2 ]
+    bel[kk,:] = [ hex[ indhex+1, indxzneg[2,:] ]'  5 ]
+    kk = kk + 1
+  end
+  for ii in 1:n-1, qq in 1:q-1 # xz pos
+    indhex = (ii-1) + (m-2)*(n-1) + (qq-1)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indxzpos[1,:] ]'  6 ]
+    kk = kk + 1
+    bel[kk,:] = [ hex[ indhex+1, indxzpos[2,:] ]'  6 ]
     kk = kk + 1
   end
 
