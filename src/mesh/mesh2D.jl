@@ -201,8 +201,8 @@ function genNodes2D( porder::Int64, p::Array{Float64}, t::Array{Int64} )
   # barycentric coordinates (li1, li2, li3), the following holds:
   #   f(xi,yi) = li1 * f(x1,y1) + li2 * f(x2,y2) + li3 * f(x3,y3)
 
-  for ii = 1:nt, jj = 1:npl
-    for kk = 1:3
+  for ii in 1:nt, jj in 1:npl
+    for kk in 1:3
       nodes[jj,1,ii] += plocal[jj,kk] * p[ t[ii,kk], 1 ]
       nodes[jj,2,ii] += plocal[jj,kk] * p[ t[ii,kk], 2 ]
     end
