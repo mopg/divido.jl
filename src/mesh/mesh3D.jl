@@ -56,8 +56,8 @@ function genFaces3D( t::Array{Int64}, bel::Array{Int64} )
   nt = size(t,1)
   println(nt)
 
-  # 1 3 2 - 1 4 3 - 2 3 4 - 1 2 4
-  faces = vcat( t[:,[1,3,2]], t[:,[1,4,3]], t[:,[2,3,4]], t[:,[1,2,4]] ) # This holds all faces (but multiple copies)
+  # 2 3 4 - 1 4 3  - 1 2 4 - 1 3 2 : First ind is the vertices of face which does not included current vertices
+  faces = vcat( t[:,[2,3,4]], t[:,[1,4,3]], t[:,[1,2,4]], t[:,[1,3,2]] ) # This holds all faces (but multiple copies)
   tets  = 1:nt
   tets  = vcat( tets, tets, tets, tets )
 

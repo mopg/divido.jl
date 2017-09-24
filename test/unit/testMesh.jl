@@ -1,5 +1,6 @@
 # include("../src/mesh/mesh2D.jl")
 include("../../src/mesh/mesh3D.jl")
+include("../../src/mesh/master3D.jl")
 
 # mesh2d = Mesh2D( "square", 2 )
 
