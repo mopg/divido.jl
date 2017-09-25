@@ -31,6 +31,10 @@ function Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
     error("Unknown mesh type")
   end
 
+  if porder_ > 3
+    error("P>3 not implemented for 3D")
+  end
+
   (f_, t2f_, nodes_, ploc_, tloc_, trorder_) = genmesh3D( porder_, p_, t_, bel_ )
 
   jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
@@ -54,7 +58,6 @@ end
 function genFaces3D( t::Array{Int64}, bel::Array{Int64} )
 
   nt = size(t,1)
-  println(nt)
 
   # 2 3 4 - 1 4 3  - 1 2 4 - 1 3 2 : First ind is the vertices of face which does not included current vertices
   faces = vcat( t[:,[2,3,4]], t[:,[1,4,3]], t[:,[1,2,4]], t[:,[1,3,2]] ) # This holds all faces (but multiple copies)
