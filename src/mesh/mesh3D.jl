@@ -140,7 +140,7 @@ function genFaces3D( t::Array{Int64}, bel::Array{Int64} )
 
     #t2f[ ind, indt ] = tflip[jj] * indf # NOTE: JUST A MINUS SIGN IS NOT SUFFICIENT ANYMORE, NEED TO KNOW THE ORDERING EXACTLY (I.E. ONE OF SIX DIFFERENT ORDERINGS)
     t2f[ ind, indt ]     = indf
-    t2f[ ind, indt + 4 ] = typeorder[jj]
+    t2f[ ind, indt + 4 ] = tflip[jj] * typeorder[jj] # Sign indicates whether outward normal or not (outward: pos)
 
   end
 
@@ -160,8 +160,8 @@ function genFaces3D( t::Array{Int64}, bel::Array{Int64} )
     # Ensure boundary element is oriented counter-clockwise
     #   flip orientation of face in t2f
     indt     = f[indf,5]
-    indfint  = find( abs.(t2f[indt,1:4]) .== indf )
-    orderorg = orderind[ t2f[indt,4+indfint], : ]
+    indfint  = find( t2f[indt,1:4] .== indf )
+    orderorg = orderind[ abs.(t2f[indt,4+indfint]), : ]
     # flip nodes to get outward normal
     temp        = orderorg[3]
     orderorg[3] = orderorg[2]
