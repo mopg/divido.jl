@@ -1,6 +1,4 @@
-using GroupSlices # TODO: KEEP TRACK OF DEPENDENCIES
-
-type Mesh2D #<: Mesh    # Or should I just do union type??
+type Mesh2D <: Mesh
 
   dim::Int64            # Dimension of the problem
 

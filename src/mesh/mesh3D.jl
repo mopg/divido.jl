@@ -1,5 +1,4 @@
-using GroupSlices # TODO: KEEP TRACK OF DEPENDENCIES
-type Mesh3D #<: Mesh
+type Mesh3D <: Mesh
 
   dim::Int64            # Dimension of the problem
 
