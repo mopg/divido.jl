@@ -1,9 +1,9 @@
 # include("../src/mesh/mesh2D.jl")
-include("../../src/mesh/mesh2D.jl")
-include("../../src/mesh/master2D.jl")
-include("../../src/mesh/mesh3D.jl")
-include("../../src/mesh/master3D.jl")
-include("../../src/mesh/compJacob.jl")
+# include("../../src/mesh/mesh2D.jl")
+# include("../../src/mesh/master2D.jl")
+# include("../../src/mesh/mesh3D.jl")
+# include("../../src/mesh/master3D.jl")
+# include("../../src/mesh/compJacob.jl")
 
 # mesh2d = Mesh2D( "square", 2 )
 
@@ -12,7 +12,7 @@ tol = 1e-13
 # check boundaries
 N = 5
 M = 3
-(p,t,bel) = makecube( M, N, M )
+(p,t,bel) = luteos.makecube( M, N, M )
 
 indchecks = [3, 1, 3, 1, 2, 2]
 checkval  = [0.0, 1.0, 1.0, 0.0, 0.0, 1.0]
@@ -68,7 +68,7 @@ for ii in [5,10], jj in [2,10], kk in [2,10], pp in 1:3
 
       p2d  = master.ϕ2D'  * mesh.nodes[nods,:,el] # rows is points, cols is dimension
 
-      (normal,jcw2D) = compJacobFace( Val{3}, master.∇ϕ2D, master.gwts2D, mesh.nodes[ nods, :, el ] )
+      (normal,jcw2D) = luteos.compJacobFace( Val{3}, master.∇ϕ2D, master.gwts2D, mesh.nodes[ nods, :, el ] )
 
       if (mesh.t2f[el,qq+4] < 0)
         normal = -normal

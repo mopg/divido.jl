@@ -59,7 +59,7 @@ function Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
 
 end
 
-function genmesh3D( porder::Int64, p::Array{Float64}, t::Array{Int64}, bel::Array{Int64} )
+function genmesh3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
 
   (f_, t2f_, trorder_) = genFaces3D( t, bel )
   nodes_, ploc_, tloc_ = genNodes3D( porder, p, t )
@@ -68,7 +68,7 @@ function genmesh3D( porder::Int64, p::Array{Float64}, t::Array{Int64}, bel::Arra
 
 end
 
-function genFaces3D( t::Array{Int64}, bel::Array{Int64} )
+function genFaces3D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
   nt = size(t,1)
 
@@ -207,7 +207,7 @@ function genFaces3D( t::Array{Int64}, bel::Array{Int64} )
 
 end
 
-function genNodes3D( porder::Int64, p::Array{Float64}, t::Array{Int64} )
+function genNodes3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64} )
 
   nt     = size(t,1)
   # (plocal, tlocal) = genlocal( porder )

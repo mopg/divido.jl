@@ -14,23 +14,23 @@
 
 type Mesh2D <: Mesh
 
-  dim::Int64            # Dimension of the problem
+  dim::Int64              # Dimension of the problem
 
-  porder::Int64         # Polynomial order
+  porder::Int64           # Polynomial order
 
-  n::Int64              # Number of nodes
+  n::Int64                # Number of nodes
 
-  p::Array{Float64}     # Nodal locations
-  ploc::Array{Float64}  # Local nodal locations
-  tloc::Array{Int64}    # Local triangles
-  t::Array{Int64}       # Triangle - node connectivity
-  t2f::Array{Int64}     # Triangle - face connectivity
-  f::Array{Int64}       # Face - node/triangle connectivity
-  nodes::Array{Float64} # Nodes on which solution is evaluated
+  p::Matrix{Float64}      # Nodal locations
+  ploc::Matrix{Float64}   # Local nodal locations
+  tloc::Matrix{Int64}     # Local triangles
+  t::Matrix{Int64}        # Triangle - node connectivity
+  t2f::Matrix{Int64}      # Triangle - face connectivity
+  f::Matrix{Int64}        # Face - node/triangle connectivity
+  nodes::Array{Float64,3} # Nodes on which solution is evaluated
 
   # Jacobian -- this doesn't seem like very efficient to store like this
-  jcw::Array{Float64}
-  ∂ξ∂x::Array{Float64}
+  jcw::Matrix{Float64}
+  ∂ξ∂x::Array{Float64,3}
 
 end
 
@@ -56,7 +56,7 @@ end
 
 # Constructor with p, and t given
 
-function Mesh2D( porder_::Int64, p_::Array{Float64}, t_::Array{Int64}, bel_::Array{Int64} )
+function Mesh2D( porder_::Int64, p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64} )
 
   (f_, t2f_, nodes_, ploc_, tloc_) = genmesh( porder_, p_, t_, bel_ )
 
@@ -69,7 +69,7 @@ function Mesh2D( porder_::Int64, p_::Array{Float64}, t_::Array{Int64}, bel_::Arr
 
 end
 
-function genmesh( porder::Int64, p::Array{Float64}, t::Array{Int64}, bel_::Array{Int64} )
+function genmesh( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel_::Matrix{Int64} )
 
   (f_, t2f_)           = genFaces2D( t, bel_ )
   nodes_, ploc_, tloc_ = genNodes2D( porder, p, t )
@@ -78,7 +78,7 @@ function genmesh( porder::Int64, p::Array{Float64}, t::Array{Int64}, bel_::Array
 
 end
 
-function genFaces2D( t::Array{Int64}, bel::Array{Int64} )
+function genFaces2D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
   nt = size(t,1)
 
@@ -199,7 +199,7 @@ function genFaces2D( t::Array{Int64}, bel::Array{Int64} )
 
 end
 
-function genNodes2D( porder::Int64, p::Array{Float64}, t::Array{Int64} )
+function genNodes2D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64} )
 
   nt     = size(t,1)
   # (plocal, tlocal) = genlocal( porder )
