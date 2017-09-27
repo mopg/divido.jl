@@ -1,3 +1,17 @@
+# ---------------------------------------------------------------------------- #
+#
+#   mesh2D.jl
+#
+#   Type for 2D meshes
+#   Inherits from the abstract "mesh" type
+#
+#   λυτέος
+#   Fall 2017
+#
+#   Max Opgenoord
+#
+# ---------------------------------------------------------------------------- #
+
 type Mesh2D <: Mesh
 
   dim::Int64            # Dimension of the problem

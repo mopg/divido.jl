@@ -1,3 +1,17 @@
+# ---------------------------------------------------------------------------- #
+#
+#   mesh3D.jl
+#
+#   Type for 3D meshes
+#   Inherits from the abstract "mesh" type
+#
+#   λυτέος
+#   Fall 2017
+#
+#   Max Opgenoord
+#
+# ---------------------------------------------------------------------------- #
+
 type Mesh3D <: Mesh
 
   dim::Int64            # Dimension of the problem
