@@ -37,6 +37,8 @@ end
 # Constructor with name, i.e square
 function Mesh2D( name::String, porder_::Int64; N = 5::Int64 )
 
+  setup()
+  
   if name == "square"
     (p_, t_, bel_) = makesquare( N, N )
   else
