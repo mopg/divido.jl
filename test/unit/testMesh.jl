@@ -25,7 +25,35 @@ for jj in 1:size(bel,1)
   end
 end
 
-# check integration through volume integrals
+# check connectivity
+for ii in [2,5], jj in [2,5], kk in [2,5], pp in 1:3
+  mesh   = Mesh3D( "cube", pp, N = ii, M = jj, Q = kk )
+  master = Master3D( pp )
+  for ff in 1:size(mesh.f,3)
+
+    tr = mesh.f[ff,4]
+    tl = mesh.f[ff,5]
+
+    if tl > 0
+
+      itrf = find( mesh.t2f[tr,1:4] .== ff )
+      itlf = find( mesh.t2f[tl,1:4] .== ff )
+
+      nodr = master.perm[ :,itrf,abs.(mesh.t2f[tr,itrf+4]) ]
+      nodl = master.perm[ :,itlf,abs.(mesh.t2f[tl,itlf+4]) ]
+
+      for qq in 1:length(nodr), dd in 1:3
+        @test abs.(mesh.nodes[ nodr[qq], dd, tr ] -
+                  mesh.nodes[ nodl[qq], dd, tl ]) < tol
+        @printf("%5.4f\t%5.4f\n",mesh.nodes[ nodr[qq], dd, tr ], mesh.nodes[ nodr[qq], dd, tr ])
+      end
+
+    end
+
+  end
+end
+
+check integration through volume integrals
 for ii in [2,5,7,10], jj in [2,5,7,10], kk in [2,5,7,10], pp in 1:3
 
   mesh = Mesh3D( "cube", pp, N = ii, M = jj, Q = kk )
