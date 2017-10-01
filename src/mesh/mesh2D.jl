@@ -12,6 +12,13 @@
 #
 # ---------------------------------------------------------------------------- #
 
+"""
+    Mesh2D
+
+Mesh2D type:
+Type for 2D meshes consisting of triangles. It holds the nodes and connectivity
+information.
+"""
 type Mesh2D <: Mesh
 
   dim::Int64              # Dimension of the problem
@@ -34,15 +41,19 @@ type Mesh2D <: Mesh
 
 end
 
-# Constructor with name, i.e square
+"""
+    Mesh2D( name::String, porder_::Int64; N = 5::Int64 )
+
+Constructor for one of the default meshes. Currently "square" is implemented.
+"""
 function Mesh2D( name::String, porder_::Int64; N = 5::Int64 )
 
   setup()
-  
+
   if name == "square"
     (p_, t_, bel_) = makesquare( N, N )
   else
-    error("Unknown mesh type")
+    error("Mesh2D: Unknown mesh type")
   end
 
   (f_, t2f_, nodes_, ploc_, tloc_) = genmesh( porder_, p_, t_, bel_ )
@@ -56,8 +67,12 @@ function Mesh2D( name::String, porder_::Int64; N = 5::Int64 )
 
 end
 
-# Constructor with p, and t given
+"""
+    Mesh2D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
 
+Constructor for nodes locations (`p`), triangle connectivity (`t`), and
+boundary element information (`bel`) given.
+"""
 function Mesh2D( porder_::Int64, p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64} )
 
   (f_, t2f_, nodes_, ploc_, tloc_) = genmesh( porder_, p_, t_, bel_ )
@@ -71,6 +86,12 @@ function Mesh2D( porder_::Int64, p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::M
 
 end
 
+"""
+    genmesh( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
+
+Generates all necessary connectivity information given nodes locations (`p`),
+triangle connectivity (`t`), and boundary element information (`bel`).
+"""
 function genmesh( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel_::Matrix{Int64} )
 
   (f_, t2f_)           = genFaces2D( t, bel_ )
@@ -80,6 +101,12 @@ function genmesh( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel_::Mat
 
 end
 
+"""
+    genFaces2D( t::Matrix{Int64}, bel::Matrix{Int64} )
+
+Generates face connectivity given triangle connectivity (`t`), and
+boundary element information (`bel`).
+"""
 function genFaces2D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
   nt = size(t,1)
@@ -201,10 +228,14 @@ function genFaces2D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
 end
 
+"""
+    genNodes2D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64} )
+
+Generates the higher order nodes inside each element.
+"""
 function genNodes2D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64} )
 
   nt     = size(t,1)
-  # (plocal, tlocal) = genlocal( porder )
   (plocal,tlocal) = genlocal( porder )
 
   npl    = size(plocal,1)
@@ -226,6 +257,12 @@ function genNodes2D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64} )
 
 end
 
+"""
+    genlocal( porder::Int64 )
+
+Generates the barycentric coordinates for the higher order nodes inside
+the master element (triangle).
+"""
 function genlocal( porder::Int64 )
 
   # Generate the barycentric coordinates
@@ -327,6 +364,12 @@ function genlocal( porder::Int64 )
 
 end
 
+"""
+    makesquare( n::Int64, m::Int64 )
+
+Generates the nodes locations, triangle connectivity and boundary element
+information for a square [0,1] x [0,1].
+"""
 function makesquare( n::Int64, m::Int64 )
 
   # boundary 1 is South

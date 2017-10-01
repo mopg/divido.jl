@@ -12,6 +12,13 @@
 #
 # ---------------------------------------------------------------------------- #
 
+"""
+    Mesh3D
+
+Mesh3D type:
+Type for 3D meshes consisting of tetrahedrons. It holds the nodes and
+connectivity information.
+"""
 type Mesh3D <: Mesh
 
   dim::Int64            # Dimension of the problem
@@ -35,7 +42,11 @@ type Mesh3D <: Mesh
 
 end
 
-# Constructor with name, i.e cube
+"""
+    Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
+
+Constructor for one of the default meshes. Currently "cube" is implemented.
+"""
 function Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
 
   setup()
@@ -61,6 +72,12 @@ function Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
 
 end
 
+"""
+    genmesh3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
+
+Generates all necessary connectivity information given nodes locations (`p`),
+tetrahedron connectivity (`t`), and boundary element information (`bel`).
+"""
 function genmesh3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
 
   (f_, t2f_, trorder_) = genFaces3D( t, bel )
@@ -70,6 +87,12 @@ function genmesh3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Ma
 
 end
 
+"""
+    genFaces3D( t::Matrix{Int64}, bel::Matrix{Int64} )
+
+Generates face connectivity given tetrahedron connectivity (`t`), and
+boundary element information (`bel`).
+"""
 function genFaces3D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
   nt = size(t,1)
@@ -209,6 +232,11 @@ function genFaces3D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
 end
 
+"""
+    genNodes3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64} )
+
+Generates the higher order nodes inside each element.
+"""
 function genNodes3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64} )
 
   nt     = size(t,1)
@@ -235,10 +263,15 @@ function genNodes3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64} )
 
 end
 
+"""
+    genlocal3D( porder::Int64 )
+
+Generates the barycentric coordinates for the higher order nodes inside
+the master element (tetrahedron).
+"""
 function genlocal3D( porder::Int64 )
 
-  # Generate the barycentric coordinates
-  # here these are implemented as (1 - x - y - z, x, y, z)
+  # The barycentric coordinates are implemented as (1 - x - y - z, x, y, z)
 
   n   = Int64( round( 1/6 * (porder+1) * (porder+2) * (porder+3) ) )
   n2d = Int64( round( 0.5 * (porder+1) * (porder+2) ) )
@@ -318,6 +351,12 @@ function genlocal3D( porder::Int64 )
 
 end
 
+"""
+    makecube( n::Int64, m::Int64, q::Int64 )
+
+Generates the nodes locations, tetrahedron connectivity and boundary element
+information for a cube [0,1] x [0,1] x [0,1].
+"""
 function makecube( n::Int64, m::Int64, q::Int64 )
 
   # boundary 1 is z=0

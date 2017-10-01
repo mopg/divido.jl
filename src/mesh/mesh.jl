@@ -12,6 +12,12 @@
 #
 # ---------------------------------------------------------------------------- #
 
+"""
+    Mesh
+
+Mesh abstract type:
+Overarching abstract type for mesh types (2D and 3D).
+"""
 abstract type Mesh
 
 end
