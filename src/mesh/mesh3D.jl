@@ -49,8 +49,6 @@ Constructor for one of the default meshes. Currently "cube" is implemented.
 """
 function Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
 
-  setup()
-
   if name == "cube"
     (p_, t_, bel_) = makecube( N, M, Q )
   else

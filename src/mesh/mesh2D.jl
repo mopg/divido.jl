@@ -48,8 +48,6 @@ Constructor for one of the default meshes. Currently "square" is implemented.
 """
 function Mesh2D( name::String, porder_::Int64; N = 5::Int64 )
 
-  setup()
-
   if name == "square"
     (p_, t_, bel_) = makesquare( N, N )
   else
