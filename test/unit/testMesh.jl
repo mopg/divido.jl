@@ -55,7 +55,7 @@ for ii in [2,5], jj in [2,5], kk in [2,5], pp in 1:3
 end
 
 # check integration through volume integrals
-for ii in [2,5,7,10], jj in [2,5,7,10], kk in [2,5,7,10], pp in 1:3
+for ii in [2,5], jj in [2,5], kk in [2,5], pp in 1:3
 
   mesh = Mesh3D( "cube", pp, N = ii, M = jj, Q = kk )
   master = Master3D( pp )
@@ -73,7 +73,7 @@ for ii in [2,5,7,10], jj in [2,5,7,10], kk in [2,5,7,10], pp in 1:3
 end
 
 # check integration through surface integrals
-for ii in [5,10], jj in [2,10], kk in [2,10], pp in 1:3
+for ii in [5,7], jj in [2,7], kk in [2,7], pp in 1:3
 
   @printf("%i %i %i %i\n",pp,ii,jj,kk)
 
@@ -110,3 +110,123 @@ for ii in [5,10], jj in [2,10], kk in [2,10], pp in 1:3
   @test abs(vol - 1) < tol
 
 end
+
+### Check skewed mesh
+println("skewed mesh")
+# check integration through volume integrals
+for ii in [2,5,7,10], jj in [2,5,7,10], kk in [2,5,7,10], pp in 1:3
+
+  mesh = Mesh3D( "skewcube", pp, N = ii, M = jj, Q = kk )
+  master = Master3D( pp )
+
+  compJacob!( mesh, master )
+
+  vol = 0
+
+  for el in 1:size(mesh.nodes,3)
+    vol += sum( mesh.jcw[:,el] )
+  end
+
+  @test abs(vol - 1) < tol
+
+end
+
+# check integration through surface integrals
+for ii in [5,10], jj in [2,10], kk in [2,10], pp in 1:3
+
+  @printf("%i %i %i %i\n",pp,ii,jj,kk)
+
+  mesh = Mesh3D( "skewcube", pp, N = ii, M = jj, Q = kk )
+  master = Master3D( pp )
+  compJacob!( mesh, master )
+
+  vol = 0
+
+  for el in 1:size(mesh.nodes,3)
+
+    # using divergence theorem: ∭ᵥ (∇⋅F) dV = ∯ₛ(F⋅n)dS
+    # In this case F = 1/3 [x,y,z]
+
+    voltemp = 0
+
+    for qq in 1:4
+
+      indF = mesh.t2f[el,qq]
+
+      (ϕ2d,p2d,nods,normal,jcw2D) = luteos.compJacobFace( mesh, master, el, qq )
+
+      volttemp = 0.0
+      for ll in 1:size(p2d,1)
+        volttemp += 1/3 * jcw2D[ll] * (normal[ll,:]' * p2d[ll,:])
+      end
+      voltemp += volttemp
+    end
+
+    vol += voltemp
+
+  end
+
+  @test abs(vol - 1) < tol
+
+end
+
+# check integration through volume integrals using basis functions
+# ∭ᵥ x dV
+for ii in [2,5], jj in [2,5], kk in [2,5], pp in 1:3
+
+  mesh = Mesh3D( "skewcube", pp, N = ii, M = jj, Q = kk )
+  master = Master3D( pp )
+
+  compJacob!( mesh, master )
+
+  vol1 = 0
+  vol2 = 0
+  vol3 = 0
+
+  for el in 1:size(mesh.nodes,3)
+    vol1 += sum( diagm(mesh.jcw[:,el]) * (master.ϕ' * mesh.nodes[:,1,el] ) )
+    vol2 += sum( diagm(mesh.jcw[:,el]) * (master.ϕ' * mesh.nodes[:,2,el] ) )
+    vol3 += sum( diagm(mesh.jcw[:,el]) * (master.ϕ' * mesh.nodes[:,3,el] ) )
+  end
+
+  @test abs(vol1 - 1)   < tol
+  @test abs(vol2 - 1)   < tol
+  @test abs(vol3 - 0.5) < tol
+
+end
+
+# check that derivatives of basis functions are correct
+for ii in [2,5], jj in [2,5], kk in [2,5], pp in 1:3
+
+  mesh = Mesh3D( "skewcube", pp, N = ii, M = jj, Q = kk )
+  master = Master3D( pp, pgauss = 4 )
+
+  compJacob!( mesh, master )
+
+  for el in 1:size(mesh.nodes,3)
+    ∇ϕc   = luteos.getderbfel( master, mesh.∂ξ∂x[:,el,:] )
+    func  = mesh.nodes[:,1,el]
+    res1  = ∇ϕc[:,:,1]' * func
+    res2  = master.ϕ' * mesh.nodes[:,1,el].^0
+    for cc in 1:length(res2)
+      @test abs(res1[cc] - res2[cc]) < tol
+    end
+
+    func  = mesh.nodes[:,2,el]
+    res1  = ∇ϕc[:,:,2]' * func
+    res2  = master.ϕ' * mesh.nodes[:,2,el].^0
+    for cc in 1:length(res2)
+      @test abs(res1[cc] - res2[cc]) < tol
+    end
+
+    func  = mesh.nodes[:,3,el]
+    res1  = ∇ϕc[:,:,3]' * func
+    res2  = master.ϕ' * mesh.nodes[:,3,el].^0
+    for cc in 1:length(res2)
+      @test abs(res1[cc] - res2[cc]) < tol
+    end
+  end
+
+end
+
+# TODO: Check with skewed mesh! Integrate derivative of (x² + y) over skewed cube
