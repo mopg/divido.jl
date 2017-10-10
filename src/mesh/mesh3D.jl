@@ -53,6 +53,32 @@ function Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
     (p_, t_, bel_) = makecube( N, M, Q )
   elseif name == "skewcube"
     (p_, t_, bel_) = makeskewedcube( N, M, Q, 45.0 )
+  elseif name == "single"
+    p_   = [ 0.0 0.0 0.0;
+             1.0 0.0 0.0;
+             0.0 1.0 0.0;
+             0.0 0.0 1.0 ]
+    t_   = [ 1 2 3 4 ]
+    bel_ = [ 2 3 4 1;
+             1 4 3 2;
+             1 2 4 3;
+             1 3 2 4 ]
+  elseif name == "double"
+    p_   = [ 0.0 0.0 0.0;
+             1.0 0.0 0.0;
+             0.0 1.0 0.0;
+             0.0 0.0 1.0;
+             1.0 1.0 1.0 ]
+    t_   = [ 1 2 3 4;
+             5 3 2 4 ]
+    bel_ = [ 1 4 3 1;
+             1 2 4 2;
+             1 3 2 3;
+             3 5 2 4;
+             2 5 4 1;
+             3 4 5 1]
+  elseif name == "four"
+    (p_, t_, bel_) = makefour( N )
   else
     error("Unknown mesh type")
   end
@@ -634,6 +660,26 @@ function makeskewedcube( n::Int64, m::Int64, q::Int64, th::Float64 )
     kk = kk + 1
   end
 
+  return p, t, bel
+
+end
+
+function makefour( n::Int64 )
+  if n == 2
+    p = [ 0.0 0.0         0.0;
+          1.0 0.0         0.0;
+          0.5 0.5*sqrt(3) 0.0;
+          0.5 0.5/sqrt(3) 0.5*sqrt(3);
+          0.5 0.5/sqrt(3) 0.25 ]
+    t = [ 5     1     4     3
+          1     5     2     3
+          2     5     4     3
+          4     1     5     2 ]
+    bel = [1 3 2 1;
+           1 2 4 2;
+           3 4 2 3;
+           1 4 3 4]
+  end
   return p, t, bel
 
 end

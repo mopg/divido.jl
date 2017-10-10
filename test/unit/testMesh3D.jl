@@ -20,11 +20,10 @@ end
 for ii in [2,5], jj in [2,5], kk in [2,5], pp in 1:3
   mesh   = Mesh3D( "cube", pp, N = ii, M = jj, Q = kk )
   master = Master3D( pp )
-  for ff in 1:size(mesh.f,3)
+  for ff in 1:size(mesh.f,1)
 
     tr = mesh.f[ff,4]
     tl = mesh.f[ff,5]
-
     if tl > 0
 
       itrf = find( mesh.t2f[tr,1:4] .== ff )
@@ -75,8 +74,6 @@ end
 # check integration through surface integrals
 for ii in [5,7], jj in [2,7], kk in [2,7], pp in 1:3
 
-  @printf("%i %i %i %i\n",pp,ii,jj,kk)
-
   mesh = Mesh3D( "cube", pp, N = ii, M = jj, Q = kk )
   master = Master3D( pp )
   compJacob!( mesh, master )
@@ -112,7 +109,6 @@ for ii in [5,7], jj in [2,7], kk in [2,7], pp in 1:3
 end
 
 ### Check skewed mesh
-println("skewed mesh")
 # check integration through volume integrals
 for ii in [2,5,7,10], jj in [2,5,7,10], kk in [2,5,7,10], pp in 1:3
 
@@ -133,8 +129,6 @@ end
 
 # check integration through surface integrals
 for ii in [5,10], jj in [2,10], kk in [2,10], pp in 1:3
-
-  @printf("%i %i %i %i\n",pp,ii,jj,kk)
 
   mesh = Mesh3D( "skewcube", pp, N = ii, M = jj, Q = kk )
   master = Master3D( pp )
@@ -228,5 +222,3 @@ for ii in [2,5], jj in [2,5], kk in [2,5], pp in 1:3
   end
 
 end
-
-# TODO: Check with skewed mesh! Integrate derivative of (x² + y) over skewed cube

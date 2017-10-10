@@ -46,10 +46,18 @@ end
 
 Constructor for one of the default meshes. Currently "square" is implemented.
 """
-function Mesh2D( name::String, porder_::Int64; N = 5::Int64 )
+function Mesh2D( name::String, porder_::Int64; N = 5, M = N )
 
   if name == "square"
-    (p_, t_, bel_) = makesquare( N, N )
+    (p_, t_, bel_) = makesquare( N, M )
+  elseif name == "single"
+     p_   = [ 0.0 0.0;
+              1.0 0.0;
+              0.0 1.0 ]
+     t_   = [ 1 2 3 ]
+     bel_ = [ 2 3 1;
+              3 1 2;
+              1 2 3 ]
   else
     error("Mesh2D: Unknown mesh type")
   end
