@@ -527,11 +527,11 @@ information for a skewed cube [0,1] x [0,1] x [0,1].
 function makeskewedcube( n::Int64, m::Int64, q::Int64, th::Float64 )
 
   # boundary 1 is z=0
-  # boundary 2 is y=1
+  # boundary 2 is x=1
   # boundary 3 is z=1
-  # boundary 4 is y=0
-  # boundary 5 is x=0
-  # boundary 6 is x=1
+  # boundary 4 is x=0
+  # boundary 5 is y=0
+  # boundary 6 is y=1
 
   p   = Array{Float64}( n*m*q, 3 )
   hex = Array{Int64}( (n-1)*(m-1)*(q-1), 8 ) # Map to ordering per hex cell
