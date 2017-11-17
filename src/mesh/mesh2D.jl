@@ -46,7 +46,9 @@ end
 
 Constructor for one of the default meshes. Currently "square" is implemented.
 """
-function Mesh2D( name::String, porder_::Int64; N = 5, M = N )
+function Mesh2D( name::String, porder::Porder; N = 5, M = N )
+
+  porder_ = porder.p
 
   if name == "square"
     (p_, t_, bel_) = makesquare( N, M )

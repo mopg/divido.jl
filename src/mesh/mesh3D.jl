@@ -47,7 +47,9 @@ end
 
 Constructor for one of the default meshes. Currently "cube" is implemented.
 """
-function Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
+function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
+
+  porder_ = porder.p
 
   if name == "cube"
     (p_, t_, bel_) = makecube( N, M, Q )
