@@ -37,8 +37,8 @@ type Mesh3D <: Mesh
   trorder::Matrix{Int64} # Different ordering indices for faces
 
   # Jacobian -- this doesn't seem like very efficient to store like this
-  jcw::Matrix{Float64}
-  ∂ξ∂x::Array{Float64,3}
+  # jcw::Matrix{Float64}
+  # ∂ξ∂x::Array{Float64,3}
 
 end
 
@@ -96,7 +96,7 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
 
   n_ = size( p_, 1 )
 
-  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, nodes_, trorder_, jcw_, ∂ξ∂x_ )
+  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, nodes_, trorder_ )#, jcw_, ∂ξ∂x_ )
 
 end
 
