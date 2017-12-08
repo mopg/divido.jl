@@ -21,24 +21,21 @@ connectivity information.
 """
 type Mesh3D <: Mesh
 
-  dim::Int64            # Dimension of the problem
+  dim::Int64              # Dimension of the problem
 
-  porder::Int64         # Polynomial order
+  porder::Int64           # Polynomial order
 
-  n::Int64              # Number of nodes
+  n::Int64                # Number of nodes
 
-  p::Matrix{Float64}     # Nodal locations
-  ploc::Matrix{Float64}  # Local nodal locations
-  tloc::Matrix{Int64}    # Local tets
-  t::Matrix{Int64}       # Tet - node connectivity
-  t2f::Matrix{Int64}     # Tet - face connectivity
-  f::Matrix{Int64}       # Face - node/tet connectivity
+  p::Matrix{Float64}      # Nodal locations
+  ploc::Matrix{Float64}   # Local nodal locations
+  tloc::Matrix{Int64}     # Local tets
+  t::Matrix{Int64}        # Tet - node connectivity
+  t2f::Matrix{Int64}      # Tet - face connectivity
+  f::Matrix{Int64}        # Face - node/tet connectivity
+  fb::Matrix{Int64}       # Boundary face info
   nodes::Array{Float64,3} # Nodes on which solution is evaluated
-  trorder::Matrix{Int64} # Different ordering indices for faces
-
-  # Jacobian -- this doesn't seem like very efficient to store like this
-  # jcw::Matrix{Float64}
-  # ∂ξ∂x::Array{Float64,3}
+  trorder::Matrix{Int64}  # Different ordering indices for faces
 
 end
 
@@ -81,6 +78,10 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
              3 4 5 1]
   elseif name == "four"
     (p_, t_, bel_) = makefour( N )
+  elseif name[end-3:end] == ".su2"
+    (p_, t_, bel_, tags_) = readSU2_3D( name )
+  elseif name[end-4:end] == ".mesh" # FEFLOA
+    (p_, t_, bel_ ) = readFEFLOA_3D( name )
   else
     error("Unknown mesh type")
   end
@@ -89,14 +90,14 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
     error("P>3 not implemented for 3D")
   end
 
-  (f_, t2f_, nodes_, ploc_, tloc_, trorder_) = genmesh3D( porder_, p_, t_, bel_ )
+  (f_, t2f_, nodes_, ploc_, tloc_, trorder_, fb_) = genmesh3D( porder_, p_, t_, bel_ )
 
   jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
   ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 9, size(nodes_,3) )
 
   n_ = size( p_, 1 )
 
-  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, nodes_, trorder_ )#, jcw_, ∂ξ∂x_ )
+  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_ )
 
 end
 
@@ -108,10 +109,10 @@ tetrahedron connectivity (`t`), and boundary element information (`bel`).
 """
 function genmesh3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
 
-  (f_, t2f_, trorder_) = genFaces3D( t, bel )
+  (f_, t2f_, trorder_, fb_) = genFaces3D( t, bel )
   nodes_, ploc_, tloc_ = genNodes3D( porder, p, t )
 
-  return f_, t2f_, nodes_, ploc_, tloc_, trorder_
+  return f_, t2f_, nodes_, ploc_, tloc_, trorder_, fb_
 
 end
 
@@ -214,6 +215,8 @@ function genFaces3D( t::Matrix{Int64}, bel::Matrix{Int64} )
   # include information from 'bel' into 'f': the index of the boundaries
 
   bel[:,1:3] = sort(bel[:,1:3],2) # sort such that we compare against f
+  fb = fill( 0, size(bel,1), 2 )
+  nfb = 1
 
   # Look in fourth column of array
   indb = find( f[:,4] .== 0 )
@@ -242,6 +245,9 @@ function genFaces3D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
     # Mark correct boundary
     f[indf,5] = - bel[indel[1],4]
+    fb[nfb,1] = indf
+    fb[nfb,2] = bel[indel[1],4]
+    nfb += 1
   end
 
   # Look in fourth array
@@ -254,9 +260,12 @@ function genFaces3D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
     # Mark correct boundary
     f[indf,5] = - bel[indel[1],4]
+    fb[nfb,1] = indf
+    fb[nfb,2] = bel[indel[1],3]
+    nfb += 1
   end
 
-  return f, t2f, orderind
+  return f, t2f, orderind, fb
 
 end
 

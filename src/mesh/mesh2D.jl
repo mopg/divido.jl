@@ -33,6 +33,7 @@ type Mesh2D <: Mesh
   t::Matrix{Int64}        # Triangle - node connectivity
   t2f::Matrix{Int64}      # Triangle - face connectivity
   f::Matrix{Int64}        # Face - node/triangle connectivity
+  fb::Matrix{Int64}       # Boundary face info
   nodes::Array{Float64,3} # Nodes on which solution is evaluated
 
   # Jacobian -- this doesn't seem like very efficient to store like this
@@ -60,18 +61,24 @@ function Mesh2D( name::String, porder::Porder; N = 5, M = N )
      bel_ = [ 2 3 1;
               3 1 2;
               1 2 3 ]
+  elseif name[end-3:end] == ".su2"
+    (p_, t_, bel_, tags_) = readSU2_2D( name )
+  elseif name[end-3:end] == ".msh" # BAMG
+    (p_, t_, bel_ ) = readBAMG( name )
+  elseif name[end-4:end] == ".mesh" # FEFLOA
+    (p_, t_, bel_ ) = readFEFLOA_2D( name )
   else
     error("Mesh2D: Unknown mesh type")
   end
 
-  (f_, t2f_, nodes_, ploc_, tloc_) = genmesh( porder_, p_, t_, bel_ )
+  (f_, t2f_, nodes_, ploc_, tloc_, fb_) = genmesh( porder_, p_, t_, bel_ )
 
   # jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
   # ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 4, size(nodes_,3) )
 
   n_ = size( p_, 1 )
 
-  Mesh2D( 2, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, nodes_)#, jcw_, ∂ξ∂x_ )
+  Mesh2D( 2, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_)
 
 end
 
@@ -83,14 +90,14 @@ boundary element information (`bel`) given.
 """
 function Mesh2D( porder_::Int64, p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64} )
 
-  (f_, t2f_, nodes_, ploc_, tloc_) = genmesh( porder_, p_, t_, bel_ )
+  (f_, t2f_, nodes_, ploc_, tloc_, fb_) = genmesh( porder_, p_, t_, bel_ )
 
   # jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
   # ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 4, size(nodes_,3) )
 
   n_ = size( p_, 1 )
 
-  Mesh2D( porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, nodes_)#, jcw_, ∂ξ∂x_ )
+  Mesh2D( porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_)
 
 end
 
@@ -102,10 +109,10 @@ triangle connectivity (`t`), and boundary element information (`bel`).
 """
 function genmesh( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel_::Matrix{Int64} )
 
-  (f_, t2f_)           = genFaces2D( t, bel_ )
+  (f_, t2f_, fb_)           = genFaces2D( t, bel_ )
   nodes_, ploc_, tloc_ = genNodes2D( porder, p, t )
 
-  return f_, t2f_, nodes_, ploc_, tloc_
+  return f_, t2f_, nodes_, ploc_, tloc_, fb_
 
 end
 
@@ -196,7 +203,8 @@ function genFaces2D( t::Matrix{Int64}, bel::Matrix{Int64} )
   # include information from 'bel' into 'f': the index of the boundaries
 
   bel[:,1:2] = sort(bel[:,1:2],2) # sort such that we compare against f
-
+  fb = fill( 0, size(bel,1), 2 )
+  nfb = 1
   # Look in third array
   indb = find( f[:,3] .== 0 )
   for jj = 1:length(indb)
@@ -218,6 +226,9 @@ function genFaces2D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
     # Mark correct boundary
     f[indf,4] = - bel[indel[1],3]
+    fb[nfb,1] = indf
+    fb[nfb,2] = bel[indel[1],3]
+    nfb += 1
   end
 
   # Look in fourth array
@@ -230,9 +241,12 @@ function genFaces2D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
     # Mark correct boundary
     f[indf,4] = - bel[indel[1],3]
+    fb[nfb,1] = indf
+    fb[nfb,2] = bel[indel[1],3]
+    nfb += 1
   end
 
-  return f, t2f
+  return f, t2f, fb
 
 end
 
