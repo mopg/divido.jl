@@ -19,7 +19,7 @@ Mesh3D type:
 Type for 3D meshes consisting of tetrahedrons. It holds the nodes and
 connectivity information.
 """
-type Mesh3D <: Mesh
+struct Mesh3D <: Mesh
 
   dim::Int64              # Dimension of the problem
 

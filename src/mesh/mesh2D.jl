@@ -19,7 +19,7 @@ Mesh2D type:
 Type for 2D meshes consisting of triangles. It holds the nodes and connectivity
 information.
 """
-type Mesh2D <: Mesh
+struct Mesh2D <: Mesh
 
   dim::Int64              # Dimension of the problem
 

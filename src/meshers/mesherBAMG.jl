@@ -17,7 +17,7 @@
 MesherBAMG type:
 Type for BAMG meshes.
 """
-type MesherBAMG <: Mesher
+struct MesherBAMG <: Mesher
 
 end
 

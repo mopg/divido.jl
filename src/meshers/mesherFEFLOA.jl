@@ -17,7 +17,7 @@
 MesherFEFLOA type:
 Type for FEFLOA meshes.
 """
-type MesherFEFLOA <: Mesher
+struct MesherFEFLOA <: Mesher
 
 end
 
