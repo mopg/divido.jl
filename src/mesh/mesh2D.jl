@@ -36,10 +36,6 @@ struct Mesh2D <: Mesh
   fb::Matrix{Int64}       # Boundary face info
   nodes::Array{Float64,3} # Nodes on which solution is evaluated
 
-  # Jacobian -- this doesn't seem like very efficient to store like this
-  # jcw::Matrix{Float64}
-  # ∂ξ∂x::Array{Float64,3}
-
 end
 
 """
@@ -73,9 +69,6 @@ function Mesh2D( name::String, porder::Porder; N = 5, M = N )
 
   (f_, t2f_, nodes_, ploc_, tloc_, fb_) = genmesh( porder_, p_, t_, bel_ )
 
-  # jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
-  # ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 4, size(nodes_,3) )
-
   n_ = size( p_, 1 )
 
   Mesh2D( 2, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_)
@@ -88,16 +81,15 @@ end
 Constructor for nodes locations (`p`), triangle connectivity (`t`), and
 boundary element information (`bel`) given.
 """
-function Mesh2D( porder_::Int64, p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64} )
+function Mesh2D( porder::Porder, p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64} )
+
+  porder_ = porder.p
 
   (f_, t2f_, nodes_, ploc_, tloc_, fb_) = genmesh( porder_, p_, t_, bel_ )
 
-  # jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
-  # ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 4, size(nodes_,3) )
-
   n_ = size( p_, 1 )
 
-  Mesh2D( porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_)
+  Mesh2D( 2, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_)
 
 end
 

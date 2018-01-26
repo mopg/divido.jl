@@ -92,9 +92,6 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
 
   (f_, t2f_, nodes_, ploc_, tloc_, trorder_, fb_) = genmesh3D( porder_, p_, t_, bel_ )
 
-  jcw_  = fill( 0.0, size(nodes_, 1), size(nodes_,3) )
-  ∂ξ∂x_ = fill( 0.0, size(nodes_, 1), 9, size(nodes_,3) )
-
   n_ = size( p_, 1 )
 
   Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_ )
@@ -260,8 +257,8 @@ function genFaces3D( t::Matrix{Int64}, bel::Matrix{Int64} )
 
     # Mark correct boundary
     f[indf,5] = - bel[indel[1],4]
-    fb[nfb,1] = indf
-    fb[nfb,2] = bel[indel[1],3]
+    fb[nfb,1] =   indf
+    fb[nfb,2] =   bel[indel[1],4]
     nfb += 1
   end
 
