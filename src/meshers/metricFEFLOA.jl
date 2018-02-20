@@ -74,7 +74,7 @@ function writeMetric( mesh::Mesh2D, mesher::MesherFEFLOA,
 end
 
 """
-    writeMetric( mesh::Mesh2D, mesher::MesherFEFLOA,
+    writeMetric( mesh::Mesh3D, mesher::MesherFEFLOA,
                       metric::Vector{Float64}, flname::String )
 
 Writes 3D isotropic metric to feflo.a format in `flname`.

@@ -255,3 +255,15 @@ function readFEFLOA_3D( flname::String )
     return( p, t, bel )
 
 end
+
+"""
+    runMesher( mesher::MesherFEFLOA, flMesh::String, flMetric::String, flMeshNew::String )
+
+Runs FEFLOA mesher.
+"""
+function runMesher( mesher::MesherFEFLOA, flMesh::String, flMetric::String, flMeshNew::String )
+
+    run( `bamg -b $flMesh -M $flMetric -o $flMeshNew` )
+    mv( string(flMeshNew,".mesh"), flMeshNew )
+    
+end

@@ -135,3 +135,14 @@ function readBAMG( flname::String )
     return( p, t, bel )
 
 end
+
+"""
+    runMesher( mesher::MesherBAMG, flMesh::String, flMetric::String, flMeshNew::String )
+
+Runs BAMG mesher.
+"""
+function runMesher( mesher::MesherBAMG, flMesh::String, flMetric::String, flMeshNew::String )
+
+    run( `bamg -b $flMesh -M $flMetric -o $flMeshNew` )
+
+end
