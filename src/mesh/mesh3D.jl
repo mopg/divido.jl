@@ -99,6 +99,27 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
 end
 
 """
+    Mesh3D( name::String, porder_::Int64; N = 5::Int64, M = N, Q = N )
+
+Constructor for one of the default meshes. Currently "cube" is implemented.
+"""
+function Mesh3D( p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64}, porder::Porder )
+
+  porder_ = porder.p
+
+  if porder_ > 3
+    error("P>3 not implemented for 3D")
+  end
+
+  (f_, t2f_, nodes_, ploc_, tloc_, trorder_, fb_) = genmesh3D( porder_, p_, t_, bel_ )
+
+  n_ = size( p_, 1 )
+
+  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_ )
+
+end
+
+"""
     genmesh3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
 
 Generates all necessary connectivity information given nodes locations (`p`),

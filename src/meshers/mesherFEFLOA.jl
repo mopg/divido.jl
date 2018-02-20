@@ -263,7 +263,10 @@ Runs FEFLOA mesher.
 """
 function runMesher( mesher::MesherFEFLOA, flMesh::String, flMetric::String, flMeshNew::String )
 
-    run( `bamg -b $flMesh -M $flMetric -o $flMeshNew` )
+    if flMetric[end-3:end] != ".sol"
+        mv( flMetric, string(flMeshNew,".sol") )
+    end
+    run( `fefloa -in $flMesh -met $flMetric -out $flMeshNew` )
     mv( string(flMeshNew,".mesh"), flMeshNew )
-    
+
 end

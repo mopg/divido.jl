@@ -60,7 +60,7 @@ function writeMetric( mesh::Mesh2D, mesher::MesherFEFLOA,
     @printf( fid, "SolAtVertices\n" )
 
     @printf( fid, "%i\n", np )
-    @printf( fid, "1 1\n" )
+    @printf( fid, "1 3\n" )
 
     # Vertices
     for jj = 1:np
@@ -110,7 +110,7 @@ function writeMetric( mesh::Mesh3D, mesher::MesherFEFLOA,
 end
 
 """
-    writeMetric( mesh::Mesh2D, mesher::MesherFEFLOA,
+    writeMetric( mesh::Mesh3D, mesher::MesherFEFLOA,
                       metric::Matrix{Float64}, flname::String )
 
 Writes 3D anisotropic metric to feflo.a format in `flname`.
@@ -122,7 +122,7 @@ function writeMetric( mesh::Mesh3D, mesher::MesherFEFLOA,
     if np != size(metric,1)
         error(" Ansotropic metric error: size of metric does not correspond with size of mesh")
     end
-    if size(metric,2) != 3
+    if size(metric,2) != 6
         error(" Ansotropic metric error: wrong number of entries for metric")
     end
 
@@ -135,7 +135,7 @@ function writeMetric( mesh::Mesh3D, mesher::MesherFEFLOA,
     @printf( fid, "SolAtVertices\n" )
 
     @printf( fid, "%i\n", np )
-    @printf( fid, "1 1\n" )
+    @printf( fid, "1 3\n" )
 
     # Vertices
     for jj = 1:np
