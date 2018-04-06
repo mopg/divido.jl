@@ -37,6 +37,8 @@ struct Mesh3D <: Mesh
   nodes::Array{Float64,3} # Nodes on which solution is evaluated
   trorder::Matrix{Int64}  # Different ordering indices for faces
 
+  boundtags::Vector{String} # Boundary names
+
 end
 
 """
@@ -49,9 +51,9 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
   porder_ = porder.p
 
   if name == "cube"
-    (p_, t_, bel_) = makecube( N, M, Q )
+    (p_, t_, bel_, tags_) = makecube( N, M, Q )
   elseif name == "skewcube"
-    (p_, t_, bel_) = makeskewedcube( N, M, Q, 45.0 )
+    (p_, t_, bel_, tags_) = makeskewedcube( N, M, Q, 45.0 )
   elseif name == "single"
     p_   = [ 0.0 0.0 0.0;
              1.0 0.0 0.0;
@@ -62,26 +64,13 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
              1 4 3 2;
              1 2 4 3;
              1 3 2 4 ]
-  elseif name == "double"
-    p_   = [ 0.0 0.0 0.0;
-             1.0 0.0 0.0;
-             0.0 1.0 0.0;
-             0.0 0.0 1.0;
-             1.0 1.0 1.0 ]
-    t_   = [ 1 2 3 4;
-             5 3 2 4 ]
-    bel_ = [ 1 4 3 1;
-             1 2 4 2;
-             1 3 2 3;
-             3 5 2 4;
-             2 5 4 1;
-             3 4 5 1]
+    tags_ = ["diag", "yz", "xz", "xy"]
   elseif name == "four"
-    (p_, t_, bel_) = makefour( N )
+    (p_, t_, bel_, tags_) = makefour( N )
   elseif name[end-3:end] == ".su2"
     (p_, t_, bel_, tags_) = readSU2_3D( name )
   elseif name[end-4:end] == ".mesh" # FEFLOA
-    (p_, t_, bel_ ) = readFEFLOA_3D( name )
+    (p_, t_, bel_, tags_ ) = readFEFLOA_3D( name )
   else
     error("Unknown mesh type")
   end
@@ -94,7 +83,7 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
 
   n_ = size( p_, 1 )
 
-  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_ )
+  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_, tags_ )
 
 end
 
@@ -111,11 +100,11 @@ function Mesh3D( p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64}, po
     error("P>3 not implemented for 3D")
   end
 
-  (f_, t2f_, nodes_, ploc_, tloc_, trorder_, fb_) = genmesh3D( porder_, p_, t_, bel_ )
+  f_, t2f_, nodes_, ploc_, tloc_, trorder_, fb_ = genmesh3D( porder_, p_, t_, bel_ )
 
   n_ = size( p_, 1 )
 
-  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_ )
+  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_, tags_ )
 
 end
 
@@ -127,7 +116,7 @@ tetrahedron connectivity (`t`), and boundary element information (`bel`).
 """
 function genmesh3D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
 
-  (f_, t2f_, trorder_, fb_) = genFaces3D( t, bel )
+  f_, t2f_, trorder_, fb_ = genFaces3D( t, bel )
   nodes_, ploc_, tloc_ = genNodes3D( porder, p, t )
 
   return f_, t2f_, nodes_, ploc_, tloc_, trorder_, fb_
@@ -543,7 +532,16 @@ function makecube( n::Int64, m::Int64, q::Int64 )
     kk = kk + 1
   end
 
-  return p, t, bel
+  # Add boundary tags
+  tags = Vector{String}( 6 )
+  tags[1] = "xyneg"
+  tags[2] = "yzpos"
+  tags[3] = "xypos"
+  tags[4] = "yzneg"
+  tags[5] = "xzneg"
+  tags[6] = "xzpos"
+
+  return p, t, bel, tags
 
 end
 
@@ -689,26 +687,46 @@ function makeskewedcube( n::Int64, m::Int64, q::Int64, th::Float64 )
     kk = kk + 1
   end
 
-  return p, t, bel
+  # Add boundary tags
+  tags = Vector{String}( 6 )
+  tags[1] = "xyneg"
+  tags[2] = "yzpos"
+  tags[3] = "xypos"
+  tags[4] = "yzneg"
+  tags[5] = "xzneg"
+  tags[6] = "xzpos"
+
+  return p, t, bel, tags
 
 end
 
 function makefour( n::Int64 )
-  if n == 2
-    p = [ 0.0 0.0         0.0;
-          1.0 0.0         0.0;
-          0.5 0.5*sqrt(3) 0.0;
-          0.5 0.5/sqrt(3) 0.5*sqrt(3);
-          0.5 0.5/sqrt(3) 0.25 ]
-    t = [ 5     1     4     3
-          1     5     2     3
-          2     5     4     3
-          4     1     5     2 ]
-    bel = [1 3 2 1;
-           1 2 4 2;
-           3 4 2 3;
-           1 4 3 4]
-  end
-  return p, t, bel
+
+    if n == 2
+        p = [ 0.0 0.0         0.0;
+              1.0 0.0         0.0;
+              0.5 0.5*sqrt(3) 0.0;
+              0.5 0.5/sqrt(3) 0.5*sqrt(3);
+              0.5 0.5/sqrt(3) 0.25 ]
+        t = [ 5     1     4     3
+              1     5     2     3
+              2     5     4     3
+              4     1     5     2 ]
+        bel = [1 3 2 1;
+               1 2 4 2;
+               3 4 2 3;
+               1 4 3 4]
+    else
+        error("n is not 2")
+    end
+
+    # Add boundary tags
+    tags = Vector{String}( 4 )
+    tags[1] = "bound1"
+    tags[2] = "bound2"
+    tags[3] = "bound3"
+    tags[4] = "bound4"
+
+    return p, t, bel, tags
 
 end

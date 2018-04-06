@@ -177,7 +177,13 @@ function readFEFLOA_2D( flname::String )
 
     close(fid)
 
-    return( p, t, bel )
+    # Add boundary tags
+    tags = Vector{String}( nb )
+    for bb in 1:nb
+        tags[bb] = string("bound", bb)
+    end
+
+    return( p, t, bel, tags )
 
 end
 
@@ -252,7 +258,13 @@ function readFEFLOA_3D( flname::String )
 
     close(fid)
 
-    return( p, t, bel )
+    # Add boundary tags
+    tags = Vector{String}( nb )
+    for bb in 1:nb
+        tags[bb] = string("bound", bb)
+    end
+
+    return( p, t, bel, tags )
 
 end
 

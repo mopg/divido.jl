@@ -132,7 +132,13 @@ function readBAMG( flname::String )
 
     close(fid)
 
-    return( p, t, bel )
+    # Add boundary tags
+    tags = Vector{String}( nb )
+    for bb in 1:nb
+        tags[bb] = string("bound", bb)
+    end
+
+    return( p, t, bel, tags )
 
 end
 

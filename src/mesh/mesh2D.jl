@@ -36,6 +36,8 @@ struct Mesh2D <: Mesh
   fb::Matrix{Int64}       # Boundary face info
   nodes::Array{Float64,3} # Nodes on which solution is evaluated
 
+  boundtags::Vector{String} # Boundary tags
+
 end
 
 """
@@ -48,7 +50,7 @@ function Mesh2D( name::String, porder::Porder; N = 5, M = N )
   porder_ = porder.p
 
   if name == "square"
-    (p_, t_, bel_) = makesquare( N, M )
+    (p_, t_, bel_, tags_) = makesquare( N, M )
   elseif name == "single"
      p_   = [ 0.0 0.0;
               1.0 0.0;
@@ -57,21 +59,22 @@ function Mesh2D( name::String, porder::Porder; N = 5, M = N )
      bel_ = [ 2 3 1;
               3 1 2;
               1 2 3 ]
+     tags_ = [ "diag", "vert", "hort" ]
   elseif name[end-3:end] == ".su2"
     (p_, t_, bel_, tags_) = readSU2_2D( name )
   elseif name[end-3:end] == ".msh" # BAMG
-    (p_, t_, bel_ ) = readBAMG( name )
+    (p_, t_, bel_, tags_ ) = readBAMG( name )
   elseif name[end-4:end] == ".mesh" # FEFLOA
-    (p_, t_, bel_ ) = readFEFLOA_2D( name )
+    (p_, t_, bel_, tags_ ) = readFEFLOA_2D( name )
   else
     error("Mesh2D: Unknown mesh type")
   end
 
-  (f_, t2f_, nodes_, ploc_, tloc_, fb_) = genmesh( porder_, p_, t_, bel_ )
+  f_, t2f_, nodes_, ploc_, tloc_, fb_ = genmesh( porder_, p_, t_, bel_ )
 
   n_ = size( p_, 1 )
 
-  Mesh2D( 2, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_)
+  Mesh2D( 2, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, tags_ )
 
 end
 
@@ -439,6 +442,8 @@ function makesquare( n::Int64, m::Int64 )
     kk = kk + 1
   end
 
-  return p, t, bel
+  tags = [ "south", "east", "north", "west" ]
+
+  return p, t, bel, tags
 
 end
