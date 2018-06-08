@@ -104,7 +104,13 @@ function Mesh3D( p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64}, po
 
   n_ = size( p_, 1 )
 
-  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_, tags_ )
+  nb = maximum( bel_[:,4] )
+  tags = Vector{String}( nb )
+  for bb in 1:nb
+      tags[bb] = string("bound", bb)
+  end
+
+  Mesh3D( 3, porder_, n_, p_, ploc_, tloc_, t_, t2f_, f_, fb_, nodes_, trorder_, tags )
 
 end
 
@@ -460,6 +466,204 @@ function makecube( n::Int64, m::Int64, q::Int64 )
                2 5 6 4;
                5 7 6 4;
                8 7 4 6]
+
+  # tetrahedra
+  ntet_level = (n-1) * (m-1)
+  for ii = 1:(n-1), jj = 1:(m-1), kk = 1:(q-1)
+
+    hexind   = (ii-1) + (jj-1) * (n-1) + (kk-1) * (n-1) * (m-1)
+
+    for pp in 1:6
+      t[ 6*hexind + pp, :] = hex[ hexind+1, tethexind[pp,:] ]
+    end
+
+  end
+
+  # triangle index for boundary
+  indyzpos  = [2 4 6;
+               4 8 6]
+  indyzneg  = [1 5 3;
+               5 7 3]
+  indxzneg  = [6 5 2;
+               5 1 2]
+  indxzpos  = [8 4 7;
+               4 3 7]
+  indxypos  = [5 6 7;
+               6 8 7]
+  indxyneg  = [4 2 3;
+               2 1 3]
+
+  # boundary elements
+  kk = 1
+  for ii in 1:n-1, jj in 1:m-1 # xy neg
+    indhex = (ii-1) + (jj-1)*(n-1)
+    bel[kk,:] = [ hex[ indhex+1, indxyneg[1,:] ]'  1 ]
+    kk = kk + 1
+    bel[kk,:] = [ hex[ indhex+1, indxyneg[2,:] ]'  1 ]
+    kk = kk + 1
+  end
+  for jj in 1:m-1, qq in 1:q-1 # yz pos
+    indhex = (n-2) + (jj-1)*(n-1) + (qq-1)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indyzpos[1,:] ]'  2 ]
+    kk = kk + 1
+    bel[kk,:] = [ hex[ indhex+1, indyzpos[2,:] ]'  2 ]
+    kk = kk + 1
+  end
+  for ii in 1:n-1, jj in 1:m-1 # xy pos
+    indhex = (ii-1) + (jj-1)*(n-1) + (q-2)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indxypos[1,:] ]'  3 ]
+    kk = kk + 1
+    bel[kk,:] = [ hex[ indhex+1, indxypos[2,:] ]'  3 ]
+    kk = kk + 1
+  end
+  for jj in 1:m-1, qq in 1:q-1 # yz neg
+    indhex = (jj-1)*(n-1) + (qq-1)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indyzneg[1,:] ]'  4 ]
+    kk = kk + 1
+    bel[kk,:] = [ hex[ indhex+1, indyzneg[2,:] ]'  4 ]
+    kk = kk + 1
+  end
+  for ii in 1:n-1, qq in 1:q-1 # xz neg
+    indhex = (ii-1) + (qq-1)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indxzneg[1,:] ]'  5 ]
+    kk = kk + 1
+    bel[kk,:] = [ hex[ indhex+1, indxzneg[2,:] ]'  5 ]
+    kk = kk + 1
+  end
+  for ii in 1:n-1, qq in 1:q-1 # xz pos
+    indhex = (ii-1) + (m-2)*(n-1) + (qq-1)*(n-1)*(m-1)
+    bel[kk,:] = [ hex[ indhex+1, indxzpos[1,:] ]'  6 ]
+    kk = kk + 1
+    bel[kk,:] = [ hex[ indhex+1, indxzpos[2,:] ]'  6 ]
+    kk = kk + 1
+  end
+
+  # Add boundary tags
+  tags = Vector{String}( 6 )
+  tags[1] = "xyneg"
+  tags[2] = "yzpos"
+  tags[3] = "xypos"
+  tags[4] = "yzneg"
+  tags[5] = "xzneg"
+  tags[6] = "xzpos"
+
+  return p, t, bel, tags
+
+end
+
+"""
+    makesymcube( n::Int64, m::Int64, q::Int64 )
+
+Generates the nodes locations, tetrahedron connectivity and boundary element
+information for a cube [0,1] x [0,1] x [0,1].
+"""
+function makesymcube( n::Int64, m::Int64, q::Int64 )
+
+  # boundary 1 is z=0
+  # boundary 2 is y=1
+  # boundary 3 is z=1
+  # boundary 4 is y=0
+  # boundary 5 is x=0
+  # boundary 6 is x=1
+
+  p   = Array{Float64}( n*m*q, 3 )
+  hex = Array{Int64}( (n-1)*(m-1)*(q-1), 8 ) # Map to ordering per hex cell
+  t   = Array{Int64}( 6*(n-1)*(m-1)*(q-1), 4 )
+  bel = Array{Int64}( 4*(n-1)*(q-1) + 4*(m-1)*(q-1) + 4*(m-1)*(n-1), 4 )
+
+  # nodes
+  for ii = 1:n, jj = 1:m, kk = 1:q
+    p[ii + (jj-1) * n + (kk-1) * n * m, :] = [ 1/(n-1) * (ii - 1),
+      1/(m-1) * (jj - 1), 1/(q-1) * (kk - 1) ]
+  end
+  # hex nodes
+  kk     = 1
+  hexind = 1
+  for qq = 1:(q-1)
+    for jj = 1:(m-1)
+      for ii = 1:(n-1)
+
+        hex[ kk, : ] = [hexind,     hexind+1,     hexind+n,     hexind+n+1,
+                        hexind+n*m, hexind+n*m+1, hexind+n+n*m, hexind+n+1+n*m]
+
+        hexind += 1
+        kk += 1
+
+      end
+      hexind += 1
+    end
+    hexind += n
+  end
+
+  #         y
+  #  3----------4
+  #  |\     ^   |\
+  #  | \    |   | \
+  #  |  \   |   |  \
+  #  |   7------+---8
+  #  |   |  +-- |-- | -> x
+  #  1---+---\--2   |
+  #   \  |    \  \  |
+  #    \ |     \  \ |
+  #     \|      z  \|
+  #      5----------6
+
+
+  # tet index within hex
+  tethexindorg = [1 2 3 5;
+                  2 5 4 3;
+                  7 3 4 5;
+                  2 5 6 4;
+                  5 7 6 4;
+                  8 7 4 6]
+
+  negxmap = [ [5,5],
+              [6,6],
+              [1,1],
+              [3,3],
+              [8,15],
+              [7,16],
+              [2,13],
+              [4,14] ]
+
+  negzmap = [ [1,1],
+              [2,2],
+              [3,3],
+              [4,4],
+              [8,10],
+              [7,12],
+              [6,11],
+              [5,9] ]
+
+  negyzmap = [ [1,1],
+               [3,3],
+               [2,13],
+               [4,14],
+               [5,9],
+               [6,11],
+               [8,17],
+               [7,18] ]
+
+  tethexind = fill( 0, 4*6 )
+  tethexind[1:6,:] = tethexindorg
+
+  texhextemp = copy(tethexindorg)
+  for jj in 1:8
+    tethextemp[ tethexindorg .== negxmap[jj][1] ] = negxmap[jj][2]
+  end
+  tethexind[7:12,:] = tethexindorg
+
+  texhextemp = copy(tethexindorg)
+  for jj in 1:8
+    tethextemp[ tethexindorg .== negzmap[jj][1] ] = negxmap[jj][2]
+  end
+  tethexind[13:18,:] = tethexindorg
+
+  texhextemp = copy(tethexindorg)
+  for jj in 1:8
+    tethextemp[ tethexindorg .== negyzmap[jj][1] ] = negxmap[jj][2]
+  end
+  tethexind[19:24,:] = tethexindorg
 
   # tetrahedra
   ntet_level = (n-1) * (m-1)

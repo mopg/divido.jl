@@ -259,8 +259,9 @@ function readFEFLOA_3D( flname::String )
     close(fid)
 
     # Add boundary tags
-    tags = Vector{String}( nb )
-    for bb in 1:nb
+    nbounds = maximum( bel[:,4] )
+    tags = Vector{String}( nbounds )
+    for bb in 1:nbounds
         tags[bb] = string("bound", bb)
     end
 
