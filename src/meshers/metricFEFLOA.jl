@@ -120,10 +120,10 @@ function writeMetric( mesh::Mesh3D, mesher::MesherFEFLOA,
 
     np = size(mesh.p,1)
     if np != size(metric,1)
-        error(" Ansotropic metric error: size of metric does not correspond with size of mesh")
+        error(" Anisotropic metric error: size of metric does not correspond with size of mesh")
     end
     if size(metric,2) != 6
-        error(" Ansotropic metric error: wrong number of entries for metric")
+        error(" Anisotropic metric error: wrong number of entries for metric")
     end
 
     fid = open( flname, "w" )
