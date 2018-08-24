@@ -45,7 +45,7 @@ end
 
 Constructor for one of the default meshes. Currently "square" is implemented.
 """
-function Mesh2D( name::String, porder::Porder; N = 5, M = N )
+function Mesh2D( name::String, porder::Porder; N = 5, M = N, scl = 1. )
 
   porder_ = porder.p
 
@@ -69,6 +69,8 @@ function Mesh2D( name::String, porder::Porder; N = 5, M = N )
   else
     error("Mesh2D: Unknown mesh type")
   end
+
+  p_ .*= scl
 
   f_, t2f_, nodes_, ploc_, tloc_, fb_ = genmesh( porder_, p_, t_, bel_ )
 

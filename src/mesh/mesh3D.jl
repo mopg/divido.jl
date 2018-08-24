@@ -46,7 +46,7 @@ end
 
 Constructor for one of the default meshes. Currently "cube" is implemented.
 """
-function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
+function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N, scl = 1. )
 
   porder_ = porder.p
 
@@ -74,6 +74,8 @@ function Mesh3D( name::String, porder::Porder; N = 5::Int64, M = N, Q = N )
   else
     error("Unknown mesh type")
   end
+
+  p_ .*= scl
 
   if porder_ > 3
     error("P>3 not implemented for 3D")
