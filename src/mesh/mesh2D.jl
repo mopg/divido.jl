@@ -45,9 +45,7 @@ end
 
 Constructor for one of the default meshes. Currently "square" is implemented.
 """
-function Mesh2D( name::String, porder::Porder; N = 5, M = N, scl = 1. )
-
-  porder_ = porder.p
+function Mesh2D( name::String, porder_::Int64; N = 5, M = N, scl = 1. )
 
   if name == "square"
     (p_, t_, bel_, tags_) = makesquare( N, M )
@@ -81,14 +79,12 @@ function Mesh2D( name::String, porder::Porder; N = 5, M = N, scl = 1. )
 end
 
 """
-    Mesh2D( porder::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
+    Mesh2D( porder_::Int64, p::Matrix{Float64}, t::Matrix{Int64}, bel::Matrix{Int64} )
 
 Constructor for nodes locations (`p`), triangle connectivity (`t`), and
 boundary element information (`bel`) given.
 """
-function Mesh2D( porder::Porder, p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64} )
-
-  porder_ = porder.p
+function Mesh2D( porder_::Int64, p_::Matrix{Float64}, t_::Matrix{Int64}, bel_::Matrix{Int64} )
 
   (f_, t2f_, nodes_, ploc_, tloc_, fb_) = genmesh( porder_, p_, t_, bel_ )
 

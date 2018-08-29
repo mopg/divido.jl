@@ -25,11 +25,11 @@ Fall 2017 / Spring 2018
 
 module divido
 
+using GroupSlices
+
 # mesh
 export Mesh2D, Mesh3D
 include("mesh/mesh.jl")
-include("mesh/master.jl")
-include("mesh/compJacob.jl")
 
 # links to meshers
 export writeMsh, readBAMG, runMesher, MesherFEFLOA, MesherBAMG, writeMsh

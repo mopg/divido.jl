@@ -22,7 +22,5 @@ abstract type Mesh
 
 end
 
-using GroupSlices # TODO: KEEP TRACK OF DEPENDENCIES
-
 include("mesh2D.jl")
 include("mesh3D.jl")
